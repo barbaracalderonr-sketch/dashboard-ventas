@@ -699,14 +699,17 @@ function maquinaResumenHTML(){
       <td class="name-cell">${r.jefe}</td>
       <td>${fmt(r.fvi.aaa)}</td><td>${fmt(r.fvi.maquina)}</td><td><strong>${fmt(r.fvi.total)}</strong></td>
       <td>${fmt(r.fq.aaa)}</td><td>${fmt(r.fq.maquina)}</td><td><strong>${fmt(r.fq.total)}</strong></td>
+      <td class="na">—</td>
     </tr>
   `).join('');
   const t = MAQUINA_SUMMARY.total;
+  const totalGerenciaAll = t.fvi.total + t.fq.total;
   const totalRow = `
     <tr class="total-row">
       <td class="name-cell">Total</td>
       <td>${fmt(t.fvi.aaa)}</td><td>${fmt(t.fvi.maquina)}</td><td><strong>${fmt(t.fvi.total)}</strong></td>
       <td>${fmt(t.fq.aaa)}</td><td>${fmt(t.fq.maquina)}</td><td><strong>${fmt(t.fq.total)}</strong></td>
+      <td><strong>${fmt(totalGerenciaAll)}</strong></td>
     </tr>
   `;
   return `
@@ -718,6 +721,7 @@ function maquinaResumenHTML(){
             <th class="g-name" rowspan="2">Jefe Comercial</th>
             <th class="g-fvi" colspan="3">FVI</th>
             <th class="g-fq" colspan="3">FQ</th>
+            <th class="g-visado" rowspan="2">Total Gerencia</th>
           </tr>
           <tr class="sub-row">
             <th>AAA</th><th>Máquina</th><th>Total</th>
@@ -1189,12 +1193,4 @@ function renderCargarDatos(){
 
 function initDashboard(){
   const today = new Date();
-  document.getElementById('today-date').textContent = today.toLocaleDateString('es-CL', { day:'numeric', month:'long', year:'numeric' });
-  renderTabs();
-  renderContent();
-  loadRemoteData();
-}
-</script>
-
-</body>
-</html>
+  document.getEleme
