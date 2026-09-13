@@ -694,14 +694,17 @@ let MAQUINA_SUMMARY = {
 
 function maquinaResumenHTML(){
   function fmt(n){ return n.toLocaleString('es-CL'); }
-  const rows = [...MAQUINA_SUMMARY.rows].sort((a,b)=>jefeSortIndex(a.jefe)-jefeSortIndex(b.jefe)).map(r=>`
+  const rows = [...MAQUINA_SUMMARY.rows].sort((a,b)=>jefeSortIndex(a.jefe)-jefeSortIndex(b.jefe)).map(r=>{
+    const totalGerencia = r.fvi.total + r.fq.total;
+    return `
     <tr>
       <td class="name-cell">${r.jefe}</td>
       <td>${fmt(r.fvi.aaa)}</td><td>${fmt(r.fvi.maquina)}</td><td><strong>${fmt(r.fvi.total)}</strong></td>
       <td>${fmt(r.fq.aaa)}</td><td>${fmt(r.fq.maquina)}</td><td><strong>${fmt(r.fq.total)}</strong></td>
-      <td class="na">—</td>
+      <td><strong>${fmt(totalGerencia)}</strong></td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
   const t = MAQUINA_SUMMARY.total;
   const totalGerenciaAll = t.fvi.total + t.fq.total;
   const totalRow = `
@@ -961,8 +964,8 @@ function renderContent(){
     document.getElementById('main-content').innerHTML = `
       ${maquinaResumenHTML()}
       ${movilResumenHTML()}
-      ${estadosDeVentaHTML()}
       ${estado2HTML()}
+      ${estadosDeVentaHTML()}
     `;
     return;
   }
