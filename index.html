@@ -912,7 +912,7 @@ function estado2HTML(){
 
 function renderTabs(){
   const tabsEl = document.getElementById('tabs');
-  const allTabs = [{key:'general', label:'Vista General'}, ...Object.keys(DATA).map(k=>({key:k, label:DATA[k].label})), {key:'cargar', label:'Cargar datos'}];
+  const allTabs = [{key:'general', label:'Vista General'}, ...Object.keys(DATA).map(k=>({key:k, label:DATA[k].label})), {key:'cargar', label:'Cargar datos'}, {key:'descargar', label:'Descargar BBDD'}];
   tabsEl.innerHTML = allTabs.map(t=>{
     return `<button class="${t.key===activeTab?'active':''}" onclick="switchTab('${t.key}')">${t.label}</button>`;
   }).join('');
@@ -981,6 +981,10 @@ function renderContent(){
   }
   if(activeTab === 'cargar'){
     renderCargarDatos();
+    return;
+  }
+  if(activeTab === 'descargar'){
+    renderDescargarBBDD();
     return;
   }
   if(activeTab === 'movil'){
@@ -1134,15 +1138,26 @@ function computeFromBBDDRows(jsonRows){
   }, { fvi:{aaa:0,maquina:0,total:0}, fq:{aaa:0,maquina:0,total:0} });
   const maquinaSummary = { rows: maquinaRows, total: maquinaTotal };
 
+  const cleanRawRows = jsonRows.map(r=>{
+    const clean = {};
+    for(const k in r){
+      if(!k.startsWith('Unnamed')) clean[k] = r[k];
+    }
+    return clean;
+  });
+
   return {
     estadosFviRows: estadosFvi.rows, estadosFviTotal: estadosFvi.total,
     estadosFqRows: estadosFq.rows, estadosFqTotal: estadosFq.total,
     estado2FviRows: estado2Fvi.rows, estado2FviTotal: estado2Fvi.total,
     estado2FqRows: estado2Fq.rows, estado2FqTotal: estado2Fq.total,
     maquinaSummary,
+    rawRows: cleanRawRows,
     updatedAt: new Date().toISOString()
   };
 }
+
+let RAW_ROWS = [];
 
 function applyRemoteData(d){
   if(!d) return;
@@ -1151,6 +1166,7 @@ function applyRemoteData(d){
   ESTADO2_FVI_ROWS = d.estado2FviRows; ESTADO2_FVI_TOTAL = d.estado2FviTotal;
   ESTADO2_FQ_ROWS = d.estado2FqRows; ESTADO2_FQ_TOTAL = d.estado2FqTotal;
   if(d.maquinaSummary) MAQUINA_SUMMARY = d.maquinaSummary;
+  if(d.rawRows) RAW_ROWS = d.rawRows;
 }
 
 async function loadRemoteData(){
@@ -1202,6 +1218,56 @@ async function handleUpload(){
   } catch(e){
     statusEl.textContent = 'Error al procesar el archivo: ' + e.message;
   }
+}
+
+const DOWNLOAD_PASSWORDS = {
+  "Gerencia2026$": "all",
+  "Supervisor2026$": "FVI"
+};
+
+function handleDownloadBBDD(){
+  const passInput = document.getElementById('download-password');
+  const statusEl = document.getElementById('download-status');
+  const pass = passInput.value;
+
+  if(!DOWNLOAD_PASSWORDS.hasOwnProperty(pass)){
+    statusEl.textContent = 'Clave incorrecta.';
+    return;
+  }
+  if(!RAW_ROWS || RAW_ROWS.length === 0){
+    statusEl.textContent = 'Aún no hay datos cargados para descargar.';
+    return;
+  }
+
+  const scope = DOWNLOAD_PASSWORDS[pass];
+  const rows = scope === 'all' ? RAW_ROWS : RAW_ROWS.filter(r => normKey(r['CANAL']) === scope);
+
+  if(rows.length === 0){
+    statusEl.textContent = 'No hay filas que coincidan con tu nivel de acceso.';
+    return;
+  }
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "BBDD");
+  const fecha = new Date().toISOString().slice(0,10);
+  const nombreArchivo = scope === 'all' ? `BBDD_Movil_Completa_${fecha}.xlsx` : `BBDD_Movil_${scope}_${fecha}.xlsx`;
+  XLSX.writeFile(wb, nombreArchivo);
+  statusEl.textContent = `Descarga lista: ${rows.length.toLocaleString('es-CL')} filas (${scope === 'all' ? 'completa' : scope}).`;
+}
+
+function renderDescargarBBDD(){
+  document.getElementById('main-content').innerHTML = `
+    <div class="section-label" style="margin-top:0;">Descargar BBDD</div>
+    <div class="donut-card" style="max-width:480px;">
+      <p style="font-size:0.88rem; color:var(--muted); margin:0 0 16px;">
+        Ingresa tu clave de acceso. Gerencia y Jefes descargan la base completa; Supervisores descargan solo los registros FVI.
+      </p>
+      <input type="password" id="download-password" placeholder="Clave de acceso" style="width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--line); border-radius:3px; color:var(--text); margin-bottom:14px;">
+      <button onclick="handleDownloadBBDD()" style="width:100%; padding:10px 12px; background:var(--amber); color:#1A1200; border:none; border-radius:3px; font-weight:600; cursor:pointer;">Descargar Excel</button>
+      <div id="download-status" style="margin-top:12px; font-size:0.85rem; color:var(--muted);"></div>
+    </div>
+  `;
 }
 
 function renderCargarDatos(){
