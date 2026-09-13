@@ -677,6 +677,62 @@ function renderEstadosTable(canal, rows, totals){
   `;
 }
 
+let MAQUINA_SUMMARY = {
+  rows: [
+    { jefe: "Carolina González Muñoz", fvi: {aaa:18,maquina:0,total:18}, fq: {aaa:0,maquina:0,total:0} },
+    { jefe: "David González Rojas", fvi: {aaa:6,maquina:15,total:21}, fq: {aaa:0,maquina:0,total:0} },
+    { jefe: "Hernán Navarro Deck", fvi: {aaa:18,maquina:71,total:89}, fq: {aaa:0,maquina:0,total:0} },
+    { jefe: "Javier Leiva Almonacid", fvi: {aaa:11,maquina:14,total:25}, fq: {aaa:66,maquina:64,total:130} },
+    { jefe: "Katherine Henriquez", fvi: {aaa:0,maquina:0,total:0}, fq: {aaa:370,maquina:137,total:507} },
+    { jefe: "Paulina Gómez Elgueta", fvi: {aaa:8,maquina:0,total:8}, fq: {aaa:0,maquina:0,total:0} }
+  ],
+  total: {
+    fvi: {aaa:61,maquina:100,total:161},
+    fq: {aaa:436,maquina:201,total:637}
+  }
+};
+
+function maquinaResumenHTML(){
+  function fmt(n){ return n.toLocaleString('es-CL'); }
+  const rows = [...MAQUINA_SUMMARY.rows].sort((a,b)=>jefeSortIndex(a.jefe)-jefeSortIndex(b.jefe)).map(r=>`
+    <tr>
+      <td class="name-cell">${r.jefe}</td>
+      <td>${fmt(r.fvi.aaa)}</td><td>${fmt(r.fvi.maquina)}</td><td><strong>${fmt(r.fvi.total)}</strong></td>
+      <td>${fmt(r.fq.aaa)}</td><td>${fmt(r.fq.maquina)}</td><td><strong>${fmt(r.fq.total)}</strong></td>
+    </tr>
+  `).join('');
+  const t = MAQUINA_SUMMARY.total;
+  const totalRow = `
+    <tr class="total-row">
+      <td class="name-cell">Total</td>
+      <td>${fmt(t.fvi.aaa)}</td><td>${fmt(t.fvi.maquina)}</td><td><strong>${fmt(t.fvi.total)}</strong></td>
+      <td>${fmt(t.fq.aaa)}</td><td>${fmt(t.fq.maquina)}</td><td><strong>${fmt(t.fq.total)}</strong></td>
+    </tr>
+  `;
+  return `
+    <div class="section-label" style="margin-top:0;">Resumen AAA / Máquina por Jefe Comercial</div>
+    <div class="detail-table-wrap" style="margin-bottom:36px;">
+      <table class="detail">
+        <thead>
+          <tr class="group-row">
+            <th class="g-name" rowspan="2">Jefe Comercial</th>
+            <th class="g-fvi" colspan="3">FVI</th>
+            <th class="g-fq" colspan="3">FQ</th>
+          </tr>
+          <tr class="sub-row">
+            <th>AAA</th><th>Máquina</th><th>Total</th>
+            <th>AAA</th><th>Máquina</th><th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+          ${totalRow}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 function movilResumenHTML(){
   const rows = [...GENERAL.rows].sort((a,b)=>jefeSortIndex(a.name)-jefeSortIndex(b.name)).map(r=>`
     <tr>
@@ -899,6 +955,7 @@ function renderContent(){
   }
   if(activeTab === 'movil'){
     document.getElementById('main-content').innerHTML = `
+      ${maquinaResumenHTML()}
       ${movilResumenHTML()}
       ${estadosDeVentaHTML()}
       ${estado2HTML()}
@@ -1021,11 +1078,36 @@ function computeFromBBDDRows(jsonRows){
   const estado2Fvi = buildEstado2(fviGroups);
   const estado2Fq = buildEstado2(fqGroups);
 
+  function maquinaTotalsByCanal(sub, canal){
+    const canalRows = sub.filter(r => normKey(r['CANAL']) === canal);
+    let aaa = 0, maquina = 0;
+    for(const r of canalRows){
+      const em = normKey(r['ESTADO MAQUINA']);
+      const ql = Number(r['Q L']) || 0;
+      if(em === 'AAA') aaa += ql;
+      else if(em === 'Máquina') maquina += ql;
+    }
+    return { aaa, maquina, total: aaa + maquina };
+  }
+
+  const jefesSet = new Set(jsonRows.map(r => normKey(r['JEFE COMERCIAL'])).filter(Boolean));
+  const maquinaRows = Array.from(jefesSet).map(jefe=>{
+    const sub = jsonRows.filter(r => normKey(r['JEFE COMERCIAL']) === jefe);
+    return { jefe, fvi: maquinaTotalsByCanal(sub, 'FVI'), fq: maquinaTotalsByCanal(sub, 'FQ') };
+  });
+  const maquinaTotal = maquinaRows.reduce((acc,r)=>{
+    acc.fvi.aaa += r.fvi.aaa; acc.fvi.maquina += r.fvi.maquina; acc.fvi.total += r.fvi.total;
+    acc.fq.aaa += r.fq.aaa; acc.fq.maquina += r.fq.maquina; acc.fq.total += r.fq.total;
+    return acc;
+  }, { fvi:{aaa:0,maquina:0,total:0}, fq:{aaa:0,maquina:0,total:0} });
+  const maquinaSummary = { rows: maquinaRows, total: maquinaTotal };
+
   return {
     estadosFviRows: estadosFvi.rows, estadosFviTotal: estadosFvi.total,
     estadosFqRows: estadosFq.rows, estadosFqTotal: estadosFq.total,
     estado2FviRows: estado2Fvi.rows, estado2FviTotal: estado2Fvi.total,
     estado2FqRows: estado2Fq.rows, estado2FqTotal: estado2Fq.total,
+    maquinaSummary,
     updatedAt: new Date().toISOString()
   };
 }
@@ -1036,6 +1118,7 @@ function applyRemoteData(d){
   ESTADOS_FQ_ROWS = d.estadosFqRows; ESTADOS_FQ_TOTAL = d.estadosFqTotal;
   ESTADO2_FVI_ROWS = d.estado2FviRows; ESTADO2_FVI_TOTAL = d.estado2FviTotal;
   ESTADO2_FQ_ROWS = d.estado2FqRows; ESTADO2_FQ_TOTAL = d.estado2FqTotal;
+  if(d.maquinaSummary) MAQUINA_SUMMARY = d.maquinaSummary;
 }
 
 async function loadRemoteData(){
