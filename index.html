@@ -998,6 +998,10 @@ function renderContent(){
     renderAsesorDetalleTable();
     return;
   }
+  if(activeTab === 'fo'){
+    document.getElementById('main-content').innerHTML = foResumenHTML();
+    return;
+  }
 
   const d = DATA[activeTab];
   const gauges = d.managers.map(m=>`
@@ -1267,6 +1271,100 @@ function renderDescargarBBDD(){
       <button onclick="handleDownloadBBDD()" style="width:100%; padding:10px 12px; background:var(--amber); color:#1A1200; border:none; border-radius:3px; font-weight:600; cursor:pointer;">Descargar Excel</button>
       <div id="download-status" style="margin-top:12px; font-size:0.85rem; color:var(--muted);"></div>
     </div>
+  `;
+}
+
+let FO_SUMMARY = {
+  estados: {
+    emisiones: { fvi: 4, fq: 290, total: 294 },
+    terminada: { fvi: 4, fq: 139, total: 143 },
+    pendiente: { fvi: 0, fq: 114, total: 114 },
+    total: { fvi: 4, fq: 253, total: 257 }
+  },
+  monto: {
+    mayor50: 213,
+    menor50: 44
+  },
+  jefes: [
+    { jefe: "Hernán Navarro Deck", fvi: 2, fq: 0, total: 2 },
+    { jefe: "Javier Leiva Almonacid", fvi: 0, fq: 45, total: 45 },
+    { jefe: "Katherine Henríquez Gatica", fvi: 0, fq: 208, total: 208 },
+    { jefe: "Paulina Gómez Elgueta", fvi: 2, fq: 0, total: 2 }
+  ]
+};
+
+function foResumenHTML(){
+  function fmt(n){ return n.toLocaleString('es-CL'); }
+  const e = FO_SUMMARY.estados;
+  const m = FO_SUMMARY.monto;
+  const totalMonto = m.mayor50 + m.menor50;
+  const pctMayor = totalMonto ? Math.round((m.mayor50/totalMonto)*100) : 0;
+
+  const estadoRows = [
+    ['Emisiones', e.emisiones],
+    ['Terminada', e.terminada],
+    ['Pendiente', e.pendiente],
+  ].map(([label, d])=>`
+    <tr>
+      <td class="name-cell">${label}</td>
+      <td>${fmt(d.fvi)}</td><td>${fmt(d.fq)}</td><td><strong>${fmt(d.total)}</strong></td>
+    </tr>
+  `).join('');
+
+  const jefesRows = [...FO_SUMMARY.jefes].sort((a,b)=>jefeSortIndex(a.jefe)-jefeSortIndex(b.jefe)).map(r=>`
+    <tr>
+      <td class="name-cell">${r.jefe}</td>
+      <td>${fmt(r.fvi)}</td><td>${fmt(r.fq)}</td><td><strong>${fmt(r.total)}</strong></td>
+    </tr>
+  `).join('');
+
+  return `
+    <div class="section-label" style="margin-top:0;">Resumen FO — mes en curso</div>
+    <div class="lower-grid">
+      <div class="donut-card">
+        <h3>Distribución por monto</h3>
+        <div class="donut-wrap">
+          ${donutSVG([
+            { label: 'Mayor a 50M', value: m.mayor50, color: 'var(--amber)' },
+            { label: 'Menor a 50M', value: m.menor50, color: 'var(--line)' }
+          ])}
+          <div class="legend">
+            <div class="legend-item"><span class="legend-dot" style="background:var(--amber)"></span><span>Mayor a 50M</span><span class="legend-val">${pctMayor}%</span></div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--line)"></span><span>Menor a 50M</span><span class="legend-val">${100-pctMayor}%</span></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="section-label" style="margin-top:0;">Estados — FVI / FQ / Total</div>
+        <table>
+          <thead><tr><th>Estado</th><th>FVI</th><th>FQ</th><th>Total</th></tr></thead>
+          <tbody>
+            ${estadoRows}
+            <tr class="total-row">
+              <td class="name-cell">Total (Terminada+Pendiente)</td>
+              <td>${fmt(e.total.fvi)}</td><td>${fmt(e.total.fq)}</td><td><strong>${fmt(e.total.total)}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-label">Resumen FO por Jefe Comercial</div>
+    <div class="detail-table-wrap" style="margin-bottom:36px;">
+      <table class="detail">
+        <thead>
+          <tr class="sub-row"><th>Jefe Comercial</th><th>FVI</th><th>FQ</th><th>Total</th></tr>
+        </thead>
+        <tbody>
+          ${jefesRows}
+          <tr class="total-row">
+            <td class="name-cell">Total</td>
+            <td>${fmt(e.total.fvi)}</td><td>${fmt(e.total.fq)}</td><td><strong>${fmt(e.total.total)}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:0.8rem; color:var(--muted);">Aún no incluye % de cumplimiento (pendiente definir metas por Jefe Comercial para FO).</p>
   `;
 }
 
