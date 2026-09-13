@@ -1193,4 +1193,12 @@ function renderCargarDatos(){
 
 function initDashboard(){
   const today = new Date();
-  document.getEleme
+  document.getElementById('today-date').textContent = today.toLocaleDateString('es-CL', { day:'numeric', month:'long', year:'numeric' });
+  renderTabs();
+  renderContent();
+  loadRemoteData();
+}
+</script>
+
+</body>
+</html>
