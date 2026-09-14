@@ -16,8 +16,9 @@ export default async (req) => {
       return new Response(JSON.stringify({ error: "Sin datos para guardar" }), { status: 400 });
     }
 
+    const key = body.key || "movil-data";
     const store = getStore("dashboard-ventas");
-    await store.setJSON("movil-data", body.data);
+    await store.setJSON(key, body.data);
 
     return new Response(JSON.stringify({ ok: true }), {
       headers: { "Content-Type": "application/json" }
