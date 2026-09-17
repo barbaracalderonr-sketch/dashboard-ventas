@@ -2998,11 +2998,14 @@ function renderSSPPEquipoTables(){
   if(!container) return;
   function fmt(n){ return n.toLocaleString('es-CL'); }
 
-  const supRows = SSPP_POR_SUPERVISOR
+  const supFiltered = SSPP_POR_SUPERVISOR
     .filter(r=>!SSPP_EXCLUDED_JEFES.includes(r.jefe))
     .filter(r=>matchesSearch(r, ssppEquipoSearchTerm))
-    .sort((a,b)=> jefeSortIndex(a.jefe)-jefeSortIndex(b.jefe) || a.supervisor.localeCompare(b.supervisor))
-    .map(r=>`
+    .sort((a,b)=> jefeSortIndex(a.jefe)-jefeSortIndex(b.jefe) || a.supervisor.localeCompare(b.supervisor));
+
+  const supTotals = supFiltered.reduce((acc,r)=>{ acc.git+=r.git; acc.maquina+=r.maquina; return acc; }, {git:0,maquina:0});
+
+  const supRows = supFiltered.map(r=>`
       <tr>
         <td class="name-cell">${r.jefe}</td>
         <td class="name-cell">${r.supervisor}</td>
@@ -3038,7 +3041,15 @@ function renderSSPPEquipoTables(){
         <thead>
           <tr class="sub-row"><th class="name-col">Jefe Comercial</th><th class="name-col">Supervisor</th><th>GIT</th><th>Máquina</th><th>Total</th></tr>
         </thead>
-        <tbody>${noSup}</tbody>
+        <tbody>
+          ${noSup}
+          <tr class="total-row">
+            <td class="name-cell" colspan="2">Total</td>
+            <td>${fmt(supTotals.git)}</td>
+            <td>${fmt(supTotals.maquina)}</td>
+            <td><strong>${fmt(supTotals.git + supTotals.maquina)}</strong></td>
+          </tr>
+        </tbody>
       </table>
     </div>
 
