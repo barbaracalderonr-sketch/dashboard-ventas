@@ -266,6 +266,9 @@
     margin-top:10px;
   }
 
+  .fo-split .blk{ border-left:2px solid var(--line); }
+  .fo-split td.lt50{ color:var(--muted); }
+  .fo-split th.lt50{ opacity:.75; }
   .lower-grid{
     display:grid;
     grid-template-columns: 340px 1fr;
@@ -1494,6 +1497,8 @@ function currentPeriodYYYYMM(){
 function foMontoSplit(rows, period){
   const mk = ()=>({ fvi1:0, fvi2:0, fq1:0, fq2:0 });
   const out = { emisiones: mk(), terminada: mk(), pendiente: mk() };
+  // Desglose por Jefe Comercial (mismo orden fijo de siempre)
+  out.jefes = CANONICAL_JEFES.map(name=>({ jefe:name, terminada: mk(), pendiente: mk() }));
   for(const row of rows || []){
     const estado = String(row['ESTADO']||'').trim().toUpperCase();
     const canal = String(row['CANAL']||row['Columna1']||'').trim().toUpperCase();
@@ -1502,9 +1507,12 @@ function foMontoSplit(rows, period){
     if(!canalKey || (suma !== '1' && suma !== '2')) continue;
     const k = canalKey + suma;
     const esEmision = String(row['Fecha emision']||'').trim() === period && Number(row['CUENTA REMISION']) === 1;
+    const jefeName = String(row['JC']||'').trim().replace(/\s+(FQ|FVI)$/i, '').trim();
+    const jIdx = jefeSortIndex(jefeName);
+    const jEntry = jIdx < CANONICAL_JEFES.length ? out.jefes[jIdx] : null;
     if(esEmision) out.emisiones[k]++;
-    if(estado === 'TERMINADA') out.terminada[k]++;
-    if(estado === 'PENDIENTE') out.pendiente[k]++;
+    if(estado === 'TERMINADA'){ out.terminada[k]++; if(jEntry) jEntry.terminada[k]++; }
+    if(estado === 'PENDIENTE'){ out.pendiente[k]++; if(jEntry) jEntry.pendiente[k]++; }
   }
   return out;
 }
@@ -1620,7 +1628,7 @@ function applyRemoteDataFO(d){
   if(d.porEmpresa) FO_POR_EMPRESA = d.porEmpresa;
   if(d.rawRows) RAW_ROWS_FO = d.rawRows;
   // Si la carga guardada es anterior a este cambio, se calcula el desglose desde las filas guardadas
-  if(d.split) FO_SUMMARY.split = d.split;
+  if(d.split && d.split.jefes) FO_SUMMARY.split = d.split;
   else if(d.rawRows && d.rawRows.length) FO_SUMMARY.split = foMontoSplit(d.rawRows, periodFromDate(d.updatedAt));
 }
 
@@ -2781,6 +2789,63 @@ function foResumenHTML(){
   `;
   }).join('');
 
+  // Tabla por Jefe Comercial con desglose >50M / <50M (si hay datos cargados)
+  let jefesSplitTableHTML = '';
+  if(sp && sp.jefes){
+    const c = (d)=>`<td class="blk">${fmt(d.fvi1)}</td><td class="lt50">${fmt(d.fvi2)}</td><td class="blk">${fmt(d.fq1)}</td><td class="lt50">${fmt(d.fq2)}</td>`;
+    const sum = { terminada:{fvi1:0,fvi2:0,fq1:0,fq2:0}, pendiente:{fvi1:0,fvi2:0,fq1:0,fq2:0} };
+    const rowsJ = [...sp.jefes].sort((a,b)=>jefeSortIndex(a.jefe)-jefeSortIndex(b.jefe)).map(j=>{
+      for(const est of ['terminada','pendiente']) for(const k of ['fvi1','fvi2','fq1','fq2']) sum[est][k] += j[est][k];
+      const t1 = j.terminada.fvi1+j.terminada.fq1+j.pendiente.fvi1+j.pendiente.fq1;
+      const t2 = j.terminada.fvi2+j.terminada.fq2+j.pendiente.fvi2+j.pendiente.fq2;
+      const pct = pctCump(j.terminada.fvi1+j.terminada.fq1, metaFor(j.jefe,'fo'));
+      return `
+      <tr>
+        <td class="name-cell">${j.jefe}</td>
+        ${c(j.terminada)}${c(j.pendiente)}
+        <td class="blk">${fmt(t1)}</td><td class="lt50">${fmt(t2)}</td>
+        <td class="blk"><strong>${fmt(t1+t2)}</strong></td>
+        <td class="pct-cell ${pillClass(pct)}">${pct}%</td>
+      </tr>`;
+    }).join('');
+    const T1 = sum.terminada.fvi1+sum.terminada.fq1+sum.pendiente.fvi1+sum.pendiente.fq1;
+    const T2 = sum.terminada.fvi2+sum.terminada.fq2+sum.pendiente.fvi2+sum.pendiente.fq2;
+    jefesSplitTableHTML = `
+    <div class="detail-table-wrap fo-split" style="margin-bottom:12px;">
+      <table class="detail">
+        <thead>
+          <tr class="group-row">
+            <th class="g-name" rowspan="3">Jefe Comercial</th>
+            <th class="g-fvi" colspan="4">Terminada</th>
+            <th class="g-fq" colspan="4">Pendiente</th>
+            <th colspan="3">Total (Term.+Pend.)</th>
+            <th rowspan="3">% Cump</th>
+          </tr>
+          <tr class="sub-row">
+            <th class="blk" colspan="2">FVI</th><th class="blk" colspan="2">FQ</th>
+            <th class="blk" colspan="2">FVI</th><th class="blk" colspan="2">FQ</th>
+            <th class="blk" rowspan="2">&gt;50M</th><th class="lt50" rowspan="2">&lt;50M</th><th class="blk" rowspan="2">General</th>
+          </tr>
+          <tr class="sub-row">
+            <th class="blk">&gt;50M</th><th class="lt50">&lt;50M</th><th class="blk">&gt;50M</th><th class="lt50">&lt;50M</th>
+            <th class="blk">&gt;50M</th><th class="lt50">&lt;50M</th><th class="blk">&gt;50M</th><th class="lt50">&lt;50M</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsJ}
+          <tr class="total-row">
+            <td class="name-cell">Total</td>
+            ${c(sum.terminada)}${c(sum.pendiente)}
+            <td class="blk">${fmt(T1)}</td><td class="lt50">${fmt(T2)}</td>
+            <td class="blk"><strong>${fmt(T1+T2)}</strong></td>
+            <td class="pct-cell ${pillClass(totalPctFO)}">${totalPctFO}%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:0.8rem; color:var(--muted); margin-bottom:36px;">&gt;50M = columna suma 1 · &lt;50M = columna suma 2 (en gris). % Cump se calcula solo sobre Terminada &gt;50M, igual que antes.</p>`;
+  }
+
   return `
     ${kpiRowHTML([
       { value: totalPctFO+'%', label: 'Cumplimiento FO', sub: fmt(e.terminada.total)+' terminadas', tone: pillClass(totalPctFO) },
@@ -2833,6 +2898,7 @@ function foResumenHTML(){
     </div>
 
     <div class="section-label">Resumen FO por Jefe Comercial</div>
+    ${jefesSplitTableHTML ? jefesSplitTableHTML : `
     <div class="detail-table-wrap" style="margin-bottom:36px;">
       <table class="detail">
         <thead>
@@ -2861,6 +2927,7 @@ function foResumenHTML(){
       </table>
     </div>
     <p style="font-size:0.8rem; color:var(--muted); margin-bottom:36px;">% Cump se calcula solo sobre ventas en estado Terminada (no incluye Pendiente ni Emisiones).</p>
+    `}
 
     ${foPorEmpresaHTML()}
 
