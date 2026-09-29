@@ -1489,6 +1489,32 @@ function currentPeriodYYYYMM(){
   return String(now.getFullYear()) + String(now.getMonth()+1).padStart(2,'0');
 }
 
+// Desglose por monto de la tabla de Estados: suma=1 es Mayor a 50M, suma=2 es Menor a 50M.
+// Usa las mismas reglas que Emisiones/Terminada/Pendiente, pero separando suma 1 y 2.
+function foMontoSplit(rows, period){
+  const mk = ()=>({ fvi1:0, fvi2:0, fq1:0, fq2:0 });
+  const out = { emisiones: mk(), terminada: mk(), pendiente: mk() };
+  for(const row of rows || []){
+    const estado = String(row['ESTADO']||'').trim().toUpperCase();
+    const canal = String(row['CANAL']||row['Columna1']||'').trim().toUpperCase();
+    const suma = String(row['suma']||'').trim();
+    const canalKey = canal === 'FVI' ? 'fvi' : (canal === 'FQ' ? 'fq' : null);
+    if(!canalKey || (suma !== '1' && suma !== '2')) continue;
+    const k = canalKey + suma;
+    const esEmision = String(row['Fecha emision']||'').trim() === period && Number(row['CUENTA REMISION']) === 1;
+    if(esEmision) out.emisiones[k]++;
+    if(estado === 'TERMINADA') out.terminada[k]++;
+    if(estado === 'PENDIENTE') out.pendiente[k]++;
+  }
+  return out;
+}
+
+function periodFromDate(iso){
+  const d = iso ? new Date(iso) : new Date();
+  if(isNaN(d)) return currentPeriodYYYYMM();
+  return String(d.getFullYear()) + String(d.getMonth()+1).padStart(2,'0');
+}
+
 function computeFromBBDDFO(jsonRows){
   const period = currentPeriodYYYYMM();
   function jefeFromJC(jc){
@@ -1570,6 +1596,7 @@ function computeFromBBDDFO(jsonRows){
       total: { fvi: term.fvi+pend.fvi, fq: term.fq+pend.fq, total: termTotal+pendTotal }
     },
     monto: { mayor50, menor50 },
+    split: foMontoSplit(jsonRows, period),
     jefes: jefeAgg,
     porEmpresa,
     rawRows: cleanRawRowsFO,
@@ -1592,6 +1619,9 @@ function applyRemoteDataFO(d){
   if(d.monto) FO_SUMMARY.monto = d.monto;
   if(d.porEmpresa) FO_POR_EMPRESA = d.porEmpresa;
   if(d.rawRows) RAW_ROWS_FO = d.rawRows;
+  // Si la carga guardada es anterior a este cambio, se calcula el desglose desde las filas guardadas
+  if(d.split) FO_SUMMARY.split = d.split;
+  else if(d.rawRows && d.rawRows.length) FO_SUMMARY.split = foMontoSplit(d.rawRows, periodFromDate(d.updatedAt));
 }
 
 async function loadRemoteDataFO(){
@@ -2699,16 +2729,40 @@ function foResumenHTML(){
   const totalMonto = m.mayor50 + m.menor50;
   const pctMayor = totalMonto ? Math.round((m.mayor50/totalMonto)*100) : 0;
 
+  const sp = FO_SUMMARY.split;
+  const dash = '—';
+  const tot = { fvi1:0, fvi2:0, fq1:0, fq2:0 };
   const estadoRows = [
-    ['Emisiones', e.emisiones],
-    ['Terminada', e.terminada],
-    ['Pendiente', e.pendiente],
-  ].map(([label, d])=>`
+    ['Emisiones', 'emisiones'],
+    ['Terminada', 'terminada'],
+    ['Pendiente', 'pendiente'],
+  ].map(([label, key])=>{
+    if(!sp) return `
     <tr>
       <td class="name-cell">${label}</td>
-      <td>${fmt(d.fvi)}</td><td>${fmt(d.fq)}</td><td><strong>${fmt(d.total)}</strong></td>
-    </tr>
-  `).join('');
+      <td>${dash}</td><td>${dash}</td><td>${dash}</td><td>${dash}</td>
+      <td>${dash}</td><td>${dash}</td><td><strong>${dash}</strong></td>
+    </tr>`;
+    const d = sp[key];
+    if(key !== 'emisiones'){ tot.fvi1+=d.fvi1; tot.fvi2+=d.fvi2; tot.fq1+=d.fq1; tot.fq2+=d.fq2; }
+    const t1 = d.fvi1 + d.fq1, t2 = d.fvi2 + d.fq2;
+    return `
+    <tr>
+      <td class="name-cell">${label}</td>
+      <td>${fmt(d.fvi1)}</td><td>${fmt(d.fvi2)}</td>
+      <td>${fmt(d.fq1)}</td><td>${fmt(d.fq2)}</td>
+      <td>${fmt(t1)}</td><td>${fmt(t2)}</td>
+      <td><strong>${fmt(t1+t2)}</strong></td>
+    </tr>`;
+  }).join('');
+  const totalRowHTML = sp ? `
+            <tr class="total-row">
+              <td class="name-cell">Total (Terminada+Pendiente)</td>
+              <td>${fmt(tot.fvi1)}</td><td>${fmt(tot.fvi2)}</td>
+              <td>${fmt(tot.fq1)}</td><td>${fmt(tot.fq2)}</td>
+              <td>${fmt(tot.fvi1+tot.fq1)}</td><td>${fmt(tot.fvi2+tot.fq2)}</td>
+              <td><strong>${fmt(tot.fvi1+tot.fvi2+tot.fq1+tot.fq2)}</strong></td>
+            </tr>` : '';
 
   const totalMetaFO = METAS.reduce((s,m)=>s+m.fo,0);
   const totalPctFO = pctCump(e.terminada.total, totalMetaFO);
@@ -2750,18 +2804,31 @@ function foResumenHTML(){
           </div>
         </div>
       </div>
-      <div>
+      <div style="min-width:0;">
         <div class="section-label" style="margin-top:0;">Estados — FVI / FQ / Total</div>
-        <table>
-          <thead><tr><th>Estado</th><th>FVI</th><th>FQ</th><th>Total</th></tr></thead>
+        <div class="detail-table-wrap">
+        <table class="detail">
+          <thead>
+            <tr class="group-row">
+              <th class="g-name" rowspan="2">Estado</th>
+              <th class="g-fvi" colspan="2">FVI</th>
+              <th class="g-fq" colspan="2">FQ</th>
+              <th colspan="2">Total</th>
+              <th rowspan="2">Total general</th>
+            </tr>
+            <tr class="sub-row">
+              <th>&gt;50M</th><th>&lt;50M</th>
+              <th>&gt;50M</th><th>&lt;50M</th>
+              <th>&gt;50M</th><th>&lt;50M</th>
+            </tr>
+          </thead>
           <tbody>
             ${estadoRows}
-            <tr class="total-row">
-              <td class="name-cell">Total (Terminada+Pendiente)</td>
-              <td>${fmt(e.total.fvi)}</td><td>${fmt(e.total.fq)}</td><td><strong>${fmt(e.total.total)}</strong></td>
-            </tr>
+            ${totalRowHTML}
           </tbody>
         </table>
+        </div>
+        <p style="font-size:0.78rem; color:var(--muted); margin-top:8px;">${sp ? '&gt;50M = columna suma 1 · &lt;50M = columna suma 2.' : 'El desglose &gt;50M / &lt;50M aparecerá al cargar la BBDD de FO.'}</p>
       </div>
     </div>
 
