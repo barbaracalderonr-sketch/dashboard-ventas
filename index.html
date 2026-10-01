@@ -667,7 +667,8 @@ function jefeSortIndex(name){
 }
 
 // Metas por Jefe Comercial (archivo Metas.xlsx), en el mismo orden que JEFE_ORDER_KEYS
-const METAS = [
+// Valores por defecto: se reemplazan por las metas guardadas desde "Cargar datos > Metas del mes".
+let METAS = [
   { voz: 60,  fo: 7,   sspp: 600 },  // David Gonzalez Rojas
   { voz: 90,  fo: 7,   sspp: 900 },  // Paulina Gómez Elgueta
   { voz: 270, fo: 97,  sspp: 1150 }, // Javier Leiva Almonacid
@@ -675,6 +676,112 @@ const METAS = [
   { voz: 350, fo: 315, sspp: 0 },    // Katherine Henríquez Gatica
   { voz: 115, fo: 7,   sspp: 950 }   // Hernán Navarro Deck
 ];
+
+const METAS_JEFES = ["David Gonzalez Rojas","Paulina Gómez Elgueta","Javier Leiva Almonacid","Carolina González Muñoz","Katherine Henríquez Gatica","Hernán Navarro Deck"];
+let METAS_UPDATED_AT = null;
+
+function isValidMetas(arr){
+  return Array.isArray(arr) && arr.length === METAS_JEFES.length && arr.every(m =>
+    m && ['voz','fo','sspp'].every(k => typeof m[k] === 'number' && isFinite(m[k]) && m[k] >= 0));
+}
+
+async function loadRemoteMetas(){
+  try{
+    const res = await fetch('/api/get-data?key=metas-data');
+    if(!res.ok) return;
+    const json = await res.json();
+    if(json && isValidMetas(json.metas)){
+      METAS = json.metas;
+      METAS_UPDATED_AT = json.updatedAt || null;
+      renderContent();
+    }
+  } catch(e){
+    console.log('Sin metas guardadas todavía; se usan las por defecto.');
+  }
+}
+
+function metasFormHTML(){
+  const fmt = n => Number(n).toLocaleString('es-CL');
+  const totV = METAS.reduce((s,m)=>s+m.voz,0), totF = METAS.reduce((s,m)=>s+m.fo,0), totS = METAS.reduce((s,m)=>s+m.sspp,0);
+  const inp = (i,k,v) => `<input type="number" min="0" step="1" id="meta-${k}-${i}" value="${v}" style="width:90px; padding:6px 8px; background:var(--bg); border:1px solid var(--line); border-radius:3px; color:var(--text); text-align:right; font-size:0.85rem;">`;
+  const rows = METAS_JEFES.map((name,i)=>`<tr>
+      <td style="text-align:left; padding:6px 10px;">${name}</td>
+      <td style="padding:6px 10px;">${inp(i,'voz',METAS[i].voz)}</td>
+      <td style="padding:6px 10px;">${inp(i,'fo',METAS[i].fo)}</td>
+      <td style="padding:6px 10px;">${inp(i,'sspp',METAS[i].sspp)}</td>
+    </tr>`).join('');
+  const upd = METAS_UPDATED_AT
+    ? 'Metas vigentes guardadas el ' + new Date(METAS_UPDATED_AT).toLocaleString('es-CL',{timeZone:'America/Santiago',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}) + '.'
+    : 'Metas vigentes: valores iniciales (todavía no se han guardado metas desde aquí).';
+  return `
+    <div class="section-label" style="margin-top:0;">Metas del mes</div>
+    <div class="donut-card" style="max-width:640px; margin-bottom:32px;">
+      <p style="font-size:0.88rem; color:var(--muted); margin:0 0 6px;">
+        Estas son las metas con que se calcula el % de cumplimiento en todas las pestañas. Cambia los números y presiona "Guardar metas"; el cambio se aplica para todos los que vean el dashboard.
+      </p>
+      <p style="font-size:0.8rem; color:var(--muted); margin:0 0 14px;">${upd}</p>
+      <div style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-bottom:14px;">
+        <thead><tr style="border-bottom:1px solid var(--line);">
+          <th style="text-align:left; padding:6px 10px;">Jefe Comercial</th>
+          <th style="padding:6px 10px;">Móvil (Voz)</th>
+          <th style="padding:6px 10px;">FO</th>
+          <th style="padding:6px 10px;">SSPP</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr style="border-top:1px solid var(--line); font-weight:600;">
+          <td style="text-align:left; padding:6px 10px;">Total (meta actual)</td>
+          <td style="padding:6px 10px; text-align:right;">${fmt(totV)}</td>
+          <td style="padding:6px 10px; text-align:right;">${fmt(totF)}</td>
+          <td style="padding:6px 10px; text-align:right;">${fmt(totS)}</td>
+        </tr></tfoot>
+      </table>
+      </div>
+      <input type="password" id="metas-password" placeholder="Clave de carga" style="width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--line); border-radius:3px; color:var(--text); margin-bottom:14px;">
+      <button onclick="handleSaveMetas()" style="width:100%; padding:10px 12px; background:var(--amber); color:#1A1200; border:none; border-radius:3px; font-weight:600; cursor:pointer;">Guardar metas</button>
+      <div id="metas-status" style="margin-top:12px; font-size:0.85rem; color:var(--muted);"></div>
+    </div>`;
+}
+
+async function handleSaveMetas(){
+  const statusEl = document.getElementById('metas-status');
+  const pass = document.getElementById('metas-password').value;
+  const nuevas = [];
+  for(let i=0;i<METAS_JEFES.length;i++){
+    const m = {};
+    for(const k of ['voz','fo','sspp']){
+      const raw = document.getElementById(`meta-${k}-${i}`).value.trim();
+      const v = Number(raw);
+      if(raw === '' || !isFinite(v) || v < 0){
+        statusEl.textContent = 'Revisa la meta de ' + METAS_JEFES[i] + ': debe ser un número igual o mayor a 0.';
+        return;
+      }
+      m[k] = v;
+    }
+    nuevas.push(m);
+  }
+  if(!pass){ statusEl.textContent = 'Ingresa la clave de carga.'; return; }
+  statusEl.textContent = 'Guardando metas...';
+  try{
+    const nowIso = new Date().toISOString();
+    const res = await fetch('/api/save-data', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ password: pass, key: 'metas-data', data: { metas: nuevas, updatedAt: nowIso } })
+    });
+    const result = await res.json();
+    if(!res.ok){
+      statusEl.textContent = 'Error: ' + (result.error || 'no se pudo guardar. Revisa la clave.');
+      return;
+    }
+    METAS = nuevas;
+    METAS_UPDATED_AT = nowIso;
+    renderCargarDatos();
+    document.getElementById('metas-status').textContent = 'Listo. Metas guardadas; el cumplimiento ya se calcula con las nuevas metas.';
+  } catch(e){
+    statusEl.textContent = 'Error al guardar: ' + e.message;
+  }
+}
 
 function metaFor(jefeName, campo){
   const idx = jefeSortIndex(jefeName);
@@ -3211,8 +3318,8 @@ function ssppEquipoHTML(){
 }
 
 function renderCargarDatos(){
-  document.getElementById('main-content').innerHTML = `
-    <div class="section-label" style="margin-top:0;">Cargar datos del día (Móvil)</div>
+  document.getElementById('main-content').innerHTML = metasFormHTML() + `
+    <div class="section-label">Cargar datos del día (Móvil)</div>
     <div class="donut-card" style="max-width:480px; margin-bottom:32px;">
       <p style="font-size:0.88rem; color:var(--muted); margin:0 0 16px;">
         Selecciona el archivo BBDD_Movil.xlsx del día. Se procesa en tu navegador y se guarda para que todos vean la actualización, sin exponer ninguna clave.
@@ -3252,6 +3359,7 @@ function initDashboard(){
   document.getElementById('today-date').textContent = today.toLocaleDateString('es-CL', { day:'numeric', month:'long', year:'numeric' });
   renderTabs();
   renderContent();
+  loadRemoteMetas();
   loadRemoteData();
   loadRemoteDataFO();
   loadRemoteDataFOImages();
