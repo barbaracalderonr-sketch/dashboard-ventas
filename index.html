@@ -627,6 +627,28 @@
     line-height:1.5;
   }
   .evo-gap{ height:36px; }
+  .evo-vistas{
+    display:inline-flex;
+    background: var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:4px;
+    gap:4px;
+    margin:0 0 24px;
+    flex-wrap:wrap;
+  }
+  .evo-vistas button{
+    background:transparent;
+    border:none;
+    color: var(--muted);
+    font-family: var(--font-display);
+    font-weight:600;
+    font-size:0.88rem;
+    padding:9px 18px;
+    border-radius:7px;
+    cursor:pointer;
+  }
+  .evo-vistas button.active{ background: var(--panel); color: var(--tigo-blue); box-shadow: var(--shadow-sm); }
   table.evo-table td .evo-tk{ font-size:0.78rem; font-weight:700; color: var(--tigo-blue); }
   .evo-chips.evo-chips-sm{ margin-top:-6px; }
   .evo-chips.evo-chips-sm button{ font-size:0.76rem; padding:5px 12px; }
@@ -3464,9 +3486,9 @@ function ssppEquipoHTML(){
 const EVO_MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const EVO_MESES_ABR = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const EVO_SERVICIOS = [
-  { key:'movil', label:'Móvil', unidad:'líneas Voz (Q L)' },
-  { key:'fo',    label:'FO',    unidad:'órdenes terminadas' },
-  { key:'sspp',  label:'SSPP',  unidad:'NAV' }
+  { key:'movil', label:'Móvil', unidad:'líneas Voz (Q L)', corto:'líneas' },
+  { key:'fo',    label:'FO',    unidad:'órdenes terminadas', corto:'órdenes' },
+  { key:'sspp',  label:'SSPP',  unidad:'NAV', corto:'NAV' }
 ];
 // Jefes que ya no están: sus metas (y sus ventas, que en la base ya figuran a nombre del jefe actual) se suman al jefe que heredó sus cifras.
 // clave = primer nombre del bloque en el archivo de metas; valor = primer nombre del Jefe Comercial actual.
@@ -3482,37 +3504,37 @@ const EVO_META_COLOR = '#16283D';
 
 // Valores iniciales (archivos Evolutivo y Metas_Anual entregados); se reemplazan con lo que se suba en "Cargar datos".
 let EVO_VENTAS = {"year": 2026, "updatedAt": null, "rows": [
-  {"s": "fo", "j": 0, "c": "FVI", "u": "Lady Campos Mella", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0]},
-  {"s": "fo", "j": 0, "c": "", "u": "Lady Campos Mella", "p": "Atento", "m": [2, 4, 2, 1, 5, 3, 7, 0, 0, 0, 0, 0]},
-  {"s": "fo", "j": 0, "c": "", "u": "Nicole Olivares Vergara", "p": "Atento", "m": [1, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-  {"s": "fo", "j": 1, "c": "FVI", "u": "Ana Morales Deyan", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0]},
-  {"s": "fo", "j": 1, "c": "", "u": "Ana Morales Deyan", "p": "Atento", "m": [5, 8, 10, 6, 5, 1, 3, 0, 0, 0, 0, 0]},
-  {"s": "fo", "j": 2, "c": "FQ", "u": "Alfonso Reinoso Sepulveda", "p": "Global", "m": [33, 34, 47, 49, 46, 32, 20, 23, 28, 0, 0, 0]},
-  {"s": "fo", "j": 2, "c": "FQ", "u": "Amparo Astorga Lineros", "p": "Global", "m": [58, 56, 72, 53, 47, 42, 38, 44, 49, 0, 0, 0]},
-  {"s": "fo", "j": 2, "c": "FQ", "u": "Felipe Fuentealba Carrasco", "p": "Global", "m": [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]},
-  {"s": "fo", "j": 2, "c": "FQ", "u": "Javier Cofré Mena", "p": "Global", "m": [27, 30, 32, 28, 31, 24, 27, 10, 17, 0, 0, 0]},
-  {"s": "fo", "j": 2, "c": "FVI", "u": "Paula Carolina Farias ALvarez", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]},
-  {"s": "fo", "j": 2, "c": "", "u": "Paula Carolina Farias ALvarez", "p": "Atento", "m": [3, 9, 0, 2, 3, 0, 0, 0, 0, 0, 0, 0]},
-  {"s": "fo", "j": 3, "c": "FVI", "u": "Pamela Lizama Trujillo", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]},
-  {"s": "fo", "j": 3, "c": "", "u": "Hugo Herrera Delgado", "p": "Atento", "m": [1, 6, 3, 2, 1, 0, 1, 0, 0, 0, 0, 0]},
-  {"s": "fo", "j": 3, "c": "", "u": "Pamela Lizama Trujillo", "p": "Atento", "m": [0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0]},
-  {"s": "fo", "j": 4, "c": "FQ", "u": "Claudio Burgos Ojeda", "p": "Wesell", "m": [72, 57, 94, 91, 69, 61, 58, 78, 67, 0, 0, 0]},
-  {"s": "fo", "j": 4, "c": "FQ", "u": "Felipe Espinoza Bobadilla", "p": "Wesell", "m": [32, 48, 50, 55, 47, 34, 27, 28, 48, 0, 0, 0]},
-  {"s": "fo", "j": 4, "c": "FQ", "u": "Francisca Leyton Aliaga", "p": "Wesell", "m": [53, 43, 45, 34, 42, 36, 37, 62, 25, 0, 0, 0]},
-  {"s": "fo", "j": 4, "c": "FQ", "u": "Guiannina Vega Alfaro", "p": "Wesell", "m": [9, 8, 11, 8, 8, 12, 13, 15, 9, 0, 0, 0]},
-  {"s": "fo", "j": 4, "c": "FQ", "u": "Jessica Carmen Riquelme Toloza", "p": "Wesell", "m": [0, 0, 0, 0, 0, 0, 0, 0, 40, 0, 0, 0]},
-  {"s": "fo", "j": 4, "c": "FQ", "u": "Jorge Muñoz Sandoval", "p": "Wesell", "m": [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-  {"s": "fo", "j": 4, "c": "FQ", "u": "Juan Pablo Munoz Guzman", "p": "Wesell", "m": [0, 0, 0, 0, 0, 0, 0, 0, 31, 0, 0, 0]},
-  {"s": "fo", "j": 4, "c": "FQ", "u": "Marisol Vera Cancino", "p": "Wesell", "m": [71, 60, 71, 65, 66, 69, 66, 72, 59, 0, 0, 0]},
-  {"s": "fo", "j": 4, "c": "FQ", "u": "Paola Morales Ferrer", "p": "Wesell", "m": [37, 38, 58, 26, 27, 30, 16, 21, 0, 0, 0, 0]},
-  {"s": "fo", "j": 4, "c": "FQ", "u": "Pedro Ponce Reyes", "p": "Wesell", "m": [86, 66, 94, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-  {"s": "fo", "j": 4, "c": "FQ", "u": "Sup RM", "p": "Wesell", "m": [0, 0, 0, 0, 0, 0, 0, 0, 29, 0, 0, 0]},
-  {"s": "fo", "j": 4, "c": "FQ", "u": "Tamara Moreno Valderrama", "p": "Wesell", "m": [11, 5, 5, 7, 7, 17, 13, 13, 7, 0, 0, 0]},
-  {"s": "fo", "j": 4, "c": "FQ", "u": "Veronica Orellana Leiva", "p": "Wesell", "m": [0, 0, 0, 78, 67, 73, 38, 44, 29, 0, 0, 0]},
-  {"s": "fo", "j": 5, "c": "FVI", "u": "Ignacio Meriño Fernández", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 4, 2, 0, 0, 0]},
-  {"s": "fo", "j": 5, "c": "FVI", "u": "Vanessa Alvarez Cifuentes", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0]},
-  {"s": "fo", "j": 5, "c": "", "u": "Ignacio Meriño Fernández", "p": "Atento", "m": [4, 4, 2, 5, 0, 0, 5, 0, 0, 0, 0, 0]},
-  {"s": "fo", "j": 5, "c": "", "u": "Vanessa Alvarez Cifuentes", "p": "Atento", "m": [4, 1, 4, 2, 2, 0, 1, 0, 0, 0, 0, 0]},
+  {"s": "fo", "j": 0, "c": "FVI", "u": "Lady Campos Mella", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0], "k": [0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0]},
+  {"s": "fo", "j": 0, "c": "", "u": "Lady Campos Mella", "p": "Atento", "m": [2, 4, 2, 1, 5, 3, 7, 0, 0, 0, 0, 0], "k": [2, 4, 2, 1, 5, 3, 7, 0, 0, 0, 0, 0]},
+  {"s": "fo", "j": 0, "c": "", "u": "Nicole Olivares Vergara", "p": "Atento", "m": [1, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "k": [1, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "fo", "j": 1, "c": "FVI", "u": "Ana Morales Deyan", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0], "k": [0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0]},
+  {"s": "fo", "j": 1, "c": "", "u": "Ana Morales Deyan", "p": "Atento", "m": [5, 8, 10, 6, 5, 1, 3, 0, 0, 0, 0, 0], "k": [5, 8, 10, 6, 5, 1, 3, 0, 0, 0, 0, 0]},
+  {"s": "fo", "j": 2, "c": "FQ", "u": "Alfonso Reinoso Sepulveda", "p": "Global", "m": [33, 34, 47, 49, 46, 32, 20, 23, 28, 0, 0, 0], "k": [31, 34, 44, 41, 43, 25, 20, 20, 27, 0, 0, 0]},
+  {"s": "fo", "j": 2, "c": "FQ", "u": "Amparo Astorga Lineros", "p": "Global", "m": [58, 56, 72, 53, 47, 42, 38, 44, 49, 0, 0, 0], "k": [51, 48, 55, 48, 43, 37, 38, 41, 41, 0, 0, 0]},
+  {"s": "fo", "j": 2, "c": "FQ", "u": "Felipe Fuentealba Carrasco", "p": "Global", "m": [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0], "k": [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]},
+  {"s": "fo", "j": 2, "c": "FQ", "u": "Javier Cofré Mena", "p": "Global", "m": [27, 30, 32, 28, 31, 24, 27, 10, 17, 0, 0, 0], "k": [25, 26, 28, 26, 27, 24, 26, 10, 15, 0, 0, 0]},
+  {"s": "fo", "j": 2, "c": "FVI", "u": "Paula Carolina Farias ALvarez", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0], "k": [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]},
+  {"s": "fo", "j": 2, "c": "", "u": "Paula Carolina Farias ALvarez", "p": "Atento", "m": [3, 9, 0, 2, 3, 0, 0, 0, 0, 0, 0, 0], "k": [3, 8, 0, 2, 3, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "fo", "j": 3, "c": "FVI", "u": "Pamela Lizama Trujillo", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], "k": [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]},
+  {"s": "fo", "j": 3, "c": "", "u": "Hugo Herrera Delgado", "p": "Atento", "m": [1, 6, 3, 2, 1, 0, 1, 0, 0, 0, 0, 0], "k": [1, 6, 3, 2, 1, 0, 1, 0, 0, 0, 0, 0]},
+  {"s": "fo", "j": 3, "c": "", "u": "Pamela Lizama Trujillo", "p": "Atento", "m": [0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0], "k": [0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Claudio Burgos Ojeda", "p": "Wesell", "m": [72, 57, 94, 91, 69, 61, 58, 78, 67, 0, 0, 0], "k": [60, 47, 83, 81, 61, 54, 49, 66, 59, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Felipe Espinoza Bobadilla", "p": "Wesell", "m": [32, 48, 50, 55, 47, 34, 27, 28, 48, 0, 0, 0], "k": [32, 45, 47, 54, 45, 28, 24, 25, 40, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Francisca Leyton Aliaga", "p": "Wesell", "m": [53, 43, 45, 34, 42, 36, 37, 62, 25, 0, 0, 0], "k": [44, 31, 39, 31, 35, 32, 33, 53, 18, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Guiannina Vega Alfaro", "p": "Wesell", "m": [9, 8, 11, 8, 8, 12, 13, 15, 9, 0, 0, 0], "k": [9, 6, 10, 8, 7, 10, 12, 13, 9, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Jessica Carmen Riquelme Toloza", "p": "Wesell", "m": [0, 0, 0, 0, 0, 0, 0, 0, 40, 0, 0, 0], "k": [0, 0, 0, 0, 0, 0, 0, 0, 38, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Jorge Muñoz Sandoval", "p": "Wesell", "m": [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "k": [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Juan Pablo Munoz Guzman", "p": "Wesell", "m": [0, 0, 0, 0, 0, 0, 0, 0, 31, 0, 0, 0], "k": [0, 0, 0, 0, 0, 0, 0, 0, 28, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Marisol Vera Cancino", "p": "Wesell", "m": [71, 60, 71, 65, 66, 69, 66, 72, 59, 0, 0, 0], "k": [61, 57, 67, 63, 56, 64, 55, 66, 52, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Paola Morales Ferrer", "p": "Wesell", "m": [37, 38, 58, 26, 27, 30, 16, 21, 0, 0, 0, 0], "k": [36, 37, 53, 24, 20, 30, 16, 20, 0, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Pedro Ponce Reyes", "p": "Wesell", "m": [86, 66, 94, 0, 0, 0, 0, 0, 0, 0, 0, 0], "k": [78, 56, 80, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Sup RM", "p": "Wesell", "m": [0, 0, 0, 0, 0, 0, 0, 0, 29, 0, 0, 0], "k": [0, 0, 0, 0, 0, 0, 0, 0, 24, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Tamara Moreno Valderrama", "p": "Wesell", "m": [11, 5, 5, 7, 7, 17, 13, 13, 7, 0, 0, 0], "k": [8, 5, 4, 3, 7, 16, 12, 12, 7, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Veronica Orellana Leiva", "p": "Wesell", "m": [0, 0, 0, 78, 67, 73, 38, 44, 29, 0, 0, 0], "k": [0, 0, 0, 66, 55, 71, 37, 38, 20, 0, 0, 0]},
+  {"s": "fo", "j": 5, "c": "FVI", "u": "Ignacio Meriño Fernández", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 4, 2, 0, 0, 0], "k": [0, 0, 0, 0, 0, 0, 0, 4, 2, 0, 0, 0]},
+  {"s": "fo", "j": 5, "c": "FVI", "u": "Vanessa Alvarez Cifuentes", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0], "k": [0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0]},
+  {"s": "fo", "j": 5, "c": "", "u": "Ignacio Meriño Fernández", "p": "Atento", "m": [4, 4, 2, 5, 0, 0, 5, 0, 0, 0, 0, 0], "k": [3, 4, 2, 5, 0, 0, 5, 0, 0, 0, 0, 0]},
+  {"s": "fo", "j": 5, "c": "", "u": "Vanessa Alvarez Cifuentes", "p": "Atento", "m": [4, 1, 4, 2, 2, 0, 1, 0, 0, 0, 0, 0], "k": [4, 1, 4, 2, 1, 0, 1, 0, 0, 0, 0, 0]},
   {"s": "movil", "j": 0, "c": "FVI", "u": "Lady Campos Mella", "p": "Atento", "m": [55, 28, 62, 12, 39, 32, 71, 79, 54, 0, 0, 0], "k": [15, 8, 16, 5, 8, 8, 15, 14, 12, 0, 0, 0]},
   {"s": "movil", "j": 0, "c": "FVI", "u": "Nicole Olivares Vergara", "p": "Atento", "m": [3, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "k": [2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
   {"s": "movil", "j": 1, "c": "FVI", "u": "Ana María Morales Deyan", "p": "Atento", "m": [30, 26, 48, 4, 42, 91, 71, 114, 62, 0, 0, 0], "k": [4, 2, 7, 1, 4, 20, 14, 20, 9, 0, 0, 0]},
@@ -3549,35 +3571,35 @@ let EVO_VENTAS = {"year": 2026, "updatedAt": null, "rows": [
   {"s": "movil", "j": 5, "c": "FQ", "u": "Tamara Moreno Valderrama", "p": "Wesell", "m": [116, 114, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0], "k": [16, 23, 24, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
   {"s": "movil", "j": 5, "c": "FVI", "u": "Ignacio Adonnys Meriño Fernández", "p": "Atento", "m": [115, 80, 109, 27, 67, 73, 119, 69, 139, 0, 0, 0], "k": [13, 13, 15, 7, 9, 11, 6, 8, 15, 0, 0, 0]},
   {"s": "movil", "j": 5, "c": "FVI", "u": "Vanessa Alvarez Cifuentes", "p": "Atento", "m": [73, 26, 22, 17, 1, 18, 42, 7, 12, 0, 0, 0], "k": [18, 11, 7, 9, 1, 4, 8, 5, 5, 0, 0, 0]},
-  {"s": "sspp", "j": 0, "c": "ATENTO", "u": "Sup. NN RG Antofagasta", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 395.94, 646, 0, 0, 0]},
-  {"s": "sspp", "j": 0, "c": "ATENTO", "u": "Sup. NN RM Antogasta", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 1040, 0, 0, 0, 0, 0]},
-  {"s": "sspp", "j": 0, "c": "FVI", "u": "Lady Campos Mella", "p": "Atento", "m": [598, 283, 477, 504, 762, 193, 436, 569.9, 850, 0, 0, 0]},
-  {"s": "sspp", "j": 1, "c": "ATENTO", "u": "Ana Morales Deyan", "p": "Atento", "m": [0, 0, 0, 0, 972, 835, 406, 1179.92, 497, 0, 0, 0]},
-  {"s": "sspp", "j": 1, "c": "ATENTO", "u": "Sup. NN La Serena", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 1392, 0, 0, 0, 0, 0]},
-  {"s": "sspp", "j": 1, "c": "ATENTO", "u": "Sup. NN RG La Serena", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 81.52, 174, 0, 0, 0]},
-  {"s": "sspp", "j": 1, "c": "FVI", "u": "Ana Morales Deyan", "p": "Atento", "m": [2128, 927, 1367, 1528, 0, 0, 0, 0, 0, 0, 0, 0]},
-  {"s": "sspp", "j": 2, "c": "ATENTO", "u": "Paula Carolina Farias ALvarez", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 762.16, 57, 0, 0, 0]},
-  {"s": "sspp", "j": 2, "c": "ATENTO", "u": "Solange Palacios Ortiz", "p": "Atento", "m": [0, 0, 0, 0, 809, 726, 0, 0, 0, 0, 0, 0]},
-  {"s": "sspp", "j": 2, "c": "ATENTO", "u": "Solange Paola Palacios Ortiz", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 218, 0, 0, 0, 0, 0]},
-  {"s": "sspp", "j": 2, "c": "ATENTO", "u": "Sup. Cartera Valparaiso", "p": "Atento", "m": [0, 0, 0, 0, 237, 320, 0, 0, 0, 0, 0, 0]},
-  {"s": "sspp", "j": 2, "c": "FVI", "u": "Solange Palacios Ortiz", "p": "Atento", "m": [521, 761, 107, 657, 0, 0, 0, 0, 0, 0, 0, 0]},
-  {"s": "sspp", "j": 2, "c": "FVI", "u": "Sup. Cartera Valparaiso", "p": "Atento", "m": [0, 0, 432, 975, 0, 0, 0, 0, 0, 0, 0, 0]},
-  {"s": "sspp", "j": 2, "c": "FVI", "u": "Sup. Especialista Viña del Mar", "p": "Atento", "m": [1205, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-  {"s": "sspp", "j": 2, "c": "FVI", "u": "Sup. Hunting Viña del Mar", "p": "Atento", "m": [0, 292, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-  {"s": "sspp", "j": 3, "c": "ATENTO", "u": "Hugo Reinaldo Herrera Delgado", "p": "Atento", "m": [0, 0, 0, 0, 0, 409, 570, 0, 0, 0, 0, 0]},
-  {"s": "sspp", "j": 3, "c": "ATENTO", "u": "Sup. NN Concepción", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 0, 99, 0, 0, 0]},
-  {"s": "sspp", "j": 3, "c": "ATENTO", "u": "Sup. NN La Talca", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 1055, 0, 0, 0, 0, 0]},
-  {"s": "sspp", "j": 3, "c": "ATENTO", "u": "Sup. NN RG Concepción", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 1173.95, 646, 0, 0, 0]},
-  {"s": "sspp", "j": 3, "c": "FVI", "u": "Erick Soto Reyes", "p": "Atento", "m": [0, 1038, 1105, 283, 0, 0, 0, 0, 0, 0, 0, 0]},
-  {"s": "sspp", "j": 3, "c": "FVI", "u": "Hugo Reinaldo Herrera Delgado", "p": "Atento", "m": [619, 44, 26, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-  {"s": "sspp", "j": 3, "c": "FVI", "u": "Javiera Vilugron Artigas", "p": "Atento", "m": [616, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-  {"s": "sspp", "j": 3, "c": "FVI", "u": "Pamela Lizama Trujillo", "p": "Atento", "m": [96, 81, 188, 400, 116, 912, 504, 632.35, 840, 0, 0, 0]},
-  {"s": "sspp", "j": 5, "c": "ATENTO", "u": "Erick Soto Reyes", "p": "Atento", "m": [0, 0, 0, 0, 0, 108, 0, 0, 0, 0, 0, 0]},
-  {"s": "sspp", "j": 5, "c": "ATENTO", "u": "Ignacio Meriño Fernandez", "p": "Atento", "m": [0, 0, 0, 0, 912, 520, 607, 908.6, 1520, 0, 0, 0]},
-  {"s": "sspp", "j": 5, "c": "ATENTO", "u": "Vanessa Alvarez Cifuentes", "p": "Atento", "m": [0, 0, 0, 0, 204, 0, 38, 90.84, 46, 0, 0, 0]},
-  {"s": "sspp", "j": 5, "c": "FVI", "u": "Erick Soto Reyes", "p": "Atento", "m": [0, 0, 111, 16, 0, 0, 0, 0, 0, 0, 0, 0]},
-  {"s": "sspp", "j": 5, "c": "FVI", "u": "Ignacio Meriño Fernandez", "p": "Atento", "m": [551, 427, 624, 190, 0, 0, 0, 0, 0, 0, 0, 0]},
-  {"s": "sspp", "j": 5, "c": "FVI", "u": "Vanessa Alvarez Cifuentes", "p": "Atento", "m": [424, 3, 0, 142, 0, 0, 0, 0, 0, 0, 0, 0]}
+  {"s": "sspp", "j": 0, "c": "ATENTO", "u": "Sup. NN RG Antofagasta", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 395.94, 646, 0, 0, 0], "k": [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 0, "c": "ATENTO", "u": "Sup. NN RM Antogasta", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 1040, 0, 0, 0, 0, 0], "k": [0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 0, "c": "FVI", "u": "Lady Campos Mella", "p": "Atento", "m": [598, 283, 477, 504, 762, 193, 436, 569.9, 850, 0, 0, 0], "k": [10, 2, 5, 10, 6, 2, 4, 5, 6, 0, 0, 0]},
+  {"s": "sspp", "j": 1, "c": "ATENTO", "u": "Ana Morales Deyan", "p": "Atento", "m": [0, 0, 0, 0, 972, 835, 406, 1179.92, 497, 0, 0, 0], "k": [0, 0, 0, 0, 7, 8, 4, 8, 4, 0, 0, 0]},
+  {"s": "sspp", "j": 1, "c": "ATENTO", "u": "Sup. NN La Serena", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 1392, 0, 0, 0, 0, 0], "k": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 1, "c": "ATENTO", "u": "Sup. NN RG La Serena", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 81.52, 174, 0, 0, 0], "k": [0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0]},
+  {"s": "sspp", "j": 1, "c": "FVI", "u": "Ana Morales Deyan", "p": "Atento", "m": [2128, 927, 1367, 1528, 0, 0, 0, 0, 0, 0, 0, 0], "k": [9, 9, 10, 13, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 2, "c": "ATENTO", "u": "Paula Carolina Farias ALvarez", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 762.16, 57, 0, 0, 0], "k": [0, 0, 0, 0, 0, 0, 0, 5, 2, 0, 0, 0]},
+  {"s": "sspp", "j": 2, "c": "ATENTO", "u": "Solange Palacios Ortiz", "p": "Atento", "m": [0, 0, 0, 0, 809, 726, 0, 0, 0, 0, 0, 0], "k": [0, 0, 0, 0, 1, 7, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 2, "c": "ATENTO", "u": "Solange Paola Palacios Ortiz", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 218, 0, 0, 0, 0, 0], "k": [0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 2, "c": "ATENTO", "u": "Sup. Cartera Valparaiso", "p": "Atento", "m": [0, 0, 0, 0, 237, 320, 0, 0, 0, 0, 0, 0], "k": [0, 0, 0, 0, 4, 1, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 2, "c": "FVI", "u": "Solange Palacios Ortiz", "p": "Atento", "m": [521, 761, 107, 657, 0, 0, 0, 0, 0, 0, 0, 0], "k": [5, 4, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 2, "c": "FVI", "u": "Sup. Cartera Valparaiso", "p": "Atento", "m": [0, 0, 432, 975, 0, 0, 0, 0, 0, 0, 0, 0], "k": [0, 0, 7, 9, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 2, "c": "FVI", "u": "Sup. Especialista Viña del Mar", "p": "Atento", "m": [1205, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "k": [4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 2, "c": "FVI", "u": "Sup. Hunting Viña del Mar", "p": "Atento", "m": [0, 292, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "k": [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 3, "c": "ATENTO", "u": "Hugo Reinaldo Herrera Delgado", "p": "Atento", "m": [0, 0, 0, 0, 0, 409, 570, 0, 0, 0, 0, 0], "k": [0, 0, 0, 0, 0, 4, 3, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 3, "c": "ATENTO", "u": "Sup. NN Concepción", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 0, 99, 0, 0, 0], "k": [0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]},
+  {"s": "sspp", "j": 3, "c": "ATENTO", "u": "Sup. NN La Talca", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 1055, 0, 0, 0, 0, 0], "k": [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 3, "c": "ATENTO", "u": "Sup. NN RG Concepción", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 1173.95, 646, 0, 0, 0], "k": [0, 0, 0, 0, 0, 0, 0, 3, 1, 0, 0, 0]},
+  {"s": "sspp", "j": 3, "c": "FVI", "u": "Erick Soto Reyes", "p": "Atento", "m": [0, 1038, 1105, 283, 0, 0, 0, 0, 0, 0, 0, 0], "k": [0, 6, 6, 5, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 3, "c": "FVI", "u": "Hugo Reinaldo Herrera Delgado", "p": "Atento", "m": [619, 44, 26, 0, 0, 0, 0, 0, 0, 0, 0, 0], "k": [8, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 3, "c": "FVI", "u": "Javiera Vilugron Artigas", "p": "Atento", "m": [616, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "k": [9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 3, "c": "FVI", "u": "Pamela Lizama Trujillo", "p": "Atento", "m": [96, 81, 188, 400, 116, 912, 504, 632.35, 840, 0, 0, 0], "k": [1, 1, 2, 2, 1, 3, 2, 4, 3, 0, 0, 0]},
+  {"s": "sspp", "j": 5, "c": "ATENTO", "u": "Erick Soto Reyes", "p": "Atento", "m": [0, 0, 0, 0, 0, 108, 0, 0, 0, 0, 0, 0], "k": [0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 5, "c": "ATENTO", "u": "Ignacio Meriño Fernandez", "p": "Atento", "m": [0, 0, 0, 0, 912, 520, 607, 908.6, 1520, 0, 0, 0], "k": [0, 0, 0, 0, 8, 6, 5, 4, 7, 0, 0, 0]},
+  {"s": "sspp", "j": 5, "c": "ATENTO", "u": "Vanessa Alvarez Cifuentes", "p": "Atento", "m": [0, 0, 0, 0, 204, 0, 38, 90.84, 46, 0, 0, 0], "k": [0, 0, 0, 0, 5, 0, 2, 2, 3, 0, 0, 0]},
+  {"s": "sspp", "j": 5, "c": "FVI", "u": "Erick Soto Reyes", "p": "Atento", "m": [0, 0, 111, 16, 0, 0, 0, 0, 0, 0, 0, 0], "k": [0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 5, "c": "FVI", "u": "Ignacio Meriño Fernandez", "p": "Atento", "m": [551, 427, 624, 190, 0, 0, 0, 0, 0, 0, 0, 0], "k": [4, 5, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 5, "c": "FVI", "u": "Vanessa Alvarez Cifuentes", "p": "Atento", "m": [424, 3, 0, 142, 0, 0, 0, 0, 0, 0, 0, 0], "k": [4, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]}
 ]};
 let EVO_METAS = {"updatedAt": null, "gerencia": {"movil": [1150, 1030, 1250, 1200, 1050, 950, 850, 800, 960, 940, 0, 0], "fo": [515, 470, 630, 580, 530, 500, 370, 360, 440, 475, 0, 0], "sspp": [8750, 8500, 7500, 5000, 6000, 6000, 5500, 5000, 4500, 4500, 0, 0]}, "jefes": [
   {"j": 0, "c": "FVI", "movil": [120, 95, 105, 75, 60, 60, 55, 50, 60, 60, 0, 0], "fo": [0, 3, 10, 14, 7, 5, 4, 5, 7, 5, 0, 0], "sspp": [750, 750, 600, 400, 750, 850, 800, 650, 600, 650, 0, 0]}, 
@@ -3594,7 +3616,9 @@ let EVO_METAS = {"updatedAt": null, "gerencia": {"movil": [1150, 1030, 1250, 120
 let evoJefeSel = 0;
 let evoTablaServ = 'movil';
 let evoSupServ = 'movil';
-let evoSupMetrica = 'lineas';   // solo en Móvil: 'lineas' | 'clientes' | 'ticket'
+let evoSupMetrica = 'clientes';   // en el apartado de clientes: 'clientes' | 'ticket'
+let evoVista = 'ventas';          // apartado del Evolutivo: 'ventas' | 'clientes'
+let evoCliServ = 'movil';
 const EVO_PROV_ORDEN = ['Atento','Wesell','Global'];
 
 function evoNorm(v){
@@ -3643,6 +3667,10 @@ function evoProvNombre(v){
   if(n.includes('atento')) return 'Atento';
   return t;
 }
+// RUT para comparar: sin puntos, guiones ni ceros al inicio
+function evoRut(v){
+  return String(v === undefined || v === null ? '' : v).replace(/[^0-9kK]/g,'').toUpperCase().replace(/^0+/,'');
+}
 function evoJefeIdx(name){
   const n = String(name === undefined || name === null ? '' : name).trim();
   return n ? jefeSortIndex(n) : JEFE_ORDER_KEYS.length;
@@ -3650,9 +3678,9 @@ function evoJefeIdx(name){
 
 function computeEvolutivoFromWorkbook(wb){
   const defs = {
-    movil: { jefe:['jefe comercial'], valor:['q l'], cuentaFilas:false, soloActividad:'voz', prov:['proveedor'], cliente:['cuenta rut'] },  // en Móvil solo cuenta ACTIVIDAD = Voz (se excluye BAM)
-    fo:    { jefe:['jc','jefe comercial'], valor:['cuenta'], cuentaFilas:true, prov:['nombre_empresa_seller','proveedor'] },
-    sspp:  { jefe:['jefe comercial'], valor:['nav gestion'], cuentaFilas:false, prov:['proveedor'], provDefault:'Atento' }  // todo SSPP lo vende Atento (la hoja no trae columna de proveedor)
+    movil: { jefe:['jefe comercial'], valor:['q l'], cuentaFilas:false, soloActividad:'voz', prov:['proveedor'], cliente:['cuenta rut'], rutCliente:['rutcliente','rut cliente'] },  // en Móvil solo cuenta ACTIVIDAD = Voz (se excluye BAM)
+    fo:    { jefe:['jc','jefe comercial'], valor:['cuenta'], cuentaFilas:true, prov:['nombre_empresa_seller','proveedor'], rutCliente:['rut_cliente'] },
+    sspp:  { jefe:['jefe comercial'], valor:['nav gestion'], cuentaFilas:false, prov:['proveedor'], provDefault:'Atento', rutCliente:['rut'] }  // todo SSPP lo vende Atento (la hoja no trae columna de proveedor)
   };
   const hojas = {};
   wb.SheetNames.forEach(name=>{
@@ -3684,6 +3712,10 @@ function computeEvolutivoFromWorkbook(wb){
     const cProv = evoFindCol(hdr, d.prov);
     // clientes: la columna "Cuenta Rut" trae 1 en una sola fila por cliente y mes (si el RUT se repite en el mes, las demás filas traen 0)
     const cCli = d.cliente ? evoFindCol(hdr, d.cliente) : -1;
+    // si no hay "Cuenta Rut" (FO y SSPP), el cliente se cuenta en la primera fila en que aparece su RUT dentro del mes
+    const cRut = d.rutCliente ? evoFindCol(hdr, d.rutCliente) : -1;
+    const rutVistos = {};
+    let sinRut = 0;
     const cVal = evoFindCol(hdr, d.valor);
     const cYear = evoFindYearCol(hdr);
     if(cJefe < 0 || cMes < 0 || (cVal < 0 && !d.cuentaFilas)){
@@ -3705,10 +3737,24 @@ function computeEvolutivoFromWorkbook(wb){
       }
       const year = cYear >= 0 ? parseInt(row[cYear], 10) : NaN;
       if(isFinite(year)) yearCount[year] = (yearCount[year] || 0) + 1;
-      filas.push({ s: serv.key, j: evoJefeIdx(row[cJefe]), c: (cCanal < 0 || row[cCanal] === null || row[cCanal] === undefined) ? '' : String(row[cCanal]).trim().toUpperCase(), u: cSup < 0 ? '' : evoTexto(row[cSup]), p: (cProv < 0 ? '' : evoProvNombre(row[cProv])) || d.provDefault || '', k: cCli < 0 ? null : evoNum(row[cCli]), mes, year: isFinite(year) ? year : null, v });
+      let kv = null;
+      if(cCli >= 0){
+        kv = evoNum(row[cCli]);
+      } else if(cRut >= 0){
+        const rut = evoRut(row[cRut]);
+        if(!rut){ sinRut++; kv = 0; }
+        else {
+          const kr = (isFinite(year) ? year : '') + '|' + mes + '|' + rut;
+          kv = rutVistos[kr] ? 0 : 1;
+          rutVistos[kr] = true;
+        }
+      }
+      filas.push({ s: serv.key, j: evoJefeIdx(row[cJefe]), c: (cCanal < 0 || row[cCanal] === null || row[cCanal] === undefined) ? '' : String(row[cCanal]).trim().toUpperCase(), u: cSup < 0 ? '' : evoTexto(row[cSup]), p: (cProv < 0 ? '' : evoProvNombre(row[cProv])) || d.provDefault || '', k: kv, mes, year: isFinite(year) ? year : null, v });
     }
     if(cSup < 0) avisos.push('la hoja de ' + serv.label + ' no trae la columna SUPERVISOR');
-    if(d.cliente && cCli < 0) avisos.push('la hoja de ' + serv.label + ' no trae la columna "Cuenta Rut", así que no se pudieron contar los clientes ni el ticket promedio');
+    if(cCli < 0 && cRut < 0) avisos.push('la hoja de ' + serv.label + ' no trae columna de RUT del cliente, así que no se pudieron contar los clientes ni el ticket promedio');
+    else if(d.cliente && cCli < 0) avisos.push('la hoja de ' + serv.label + ' no trae la columna "Cuenta Rut": los clientes se contaron por RUT distinto en cada mes');
+    if(sinRut) avisos.push(sinRut + ' fila(s) de ' + serv.label + ' sin RUT de cliente no se contaron como cliente');
     if(d.soloActividad && cAct < 0) avisos.push('la hoja de ' + serv.label + ' no trae la columna ACTIVIDAD, así que no se pudo filtrar solo Voz');
     if(fuera) avisos.push(fuera + ' fila(s) de ' + serv.label + ' con actividad distinta de Voz no se contaron');
     if(sinMes) avisos.push(sinMes + ' fila(s) de ' + serv.label + ' sin MES CIERRE válido no se contaron');
@@ -4079,12 +4125,7 @@ function evoCardHTML(serv, jefe, last){
     return `<div class="evo-card">${head}<div class="evo-empty">Sin ventas ni meta de ${serv.label} en ${EVO_VENTAS.year}.</div></div>`;
   }
   const acum = `<div class="evo-acum">Acumulado ${evoRango(last)}: <b>${evoFmt(ac.venta)}</b>${ac.meta > 0 ? ' de ' + evoFmt(ac.meta) + ' · <span class="pill ' + pillClass(ac.pct) + '">' + ac.pct + '%</span>' : ''}</div>`;
-  let acumCli = '';
-  if(serie.clientes){
-    const c = evoAcumCli(serie, last);
-    acumCli = `<div class="evo-acum" style="margin-top:-6px;">Clientes ${evoRango(last)}: <b>${evoFmt(c)}</b> · Ticket promedio: <b>${evoTicket(ac.venta, c)}</b> líneas por cliente</div>`;
-  }
-  return `<div class="evo-card">${head}${acum}${acumCli}<div class="evo-chart" data-serv="${serv.key}" data-jefe="${jefe === null ? '' : jefe}"></div></div>`;
+  return `<div class="evo-card">${head}${acum}<div class="evo-chart" data-serv="${serv.key}" data-jefe="${jefe === null ? '' : jefe}"></div></div>`;
 }
 
 function evoTablaHTML(last){
@@ -4141,36 +4182,92 @@ function evoTablaHTML(last){
     <p class="evo-note">En cada celda: venta del mes, meta y % de cumplimiento. Cada Jefe Comercial suma sus canales FVI y FQ.${notas.length ? ' ' + notas.join(' ') : ''}</p>`;
 }
 
-// ----- Móvil: clientes y ticket promedio por Jefe Comercial -----
-function evoClientesHTML(last){
-  const serv = EVO_SERVICIOS[0];
-  const ger = evoSerie(serv.key, null);
-  if(!ger.clientes) return '';
-  const cell = (v, c) => `<td><div class="evo-v">${evoFmt(c)}</div><div class="evo-m">${evoFmt(v)} líneas</div><span class="evo-tk">${evoTicket(v, c)}</span></td>`;
-  const fila = (nombre, serie, cls) => {
-    let tds = '';
-    for(let m=0;m<=last;m++) tds += cell(serie.venta[m], serie.clientes[m]);
-    return `<tr class="${cls||''}"><td>${nombre}</td>${tds}${cell(evoAcum(serie, last).venta, evoAcumCli(serie, last))}</tr>`;
-  };
-  let body = '';
-  METAS_JEFES.forEach((nombre, j)=>{
-    const s = evoSerie(serv.key, j);
-    if(!s.clientes || (!s.venta.some(x => x > 0) && !s.clientes.some(x => x > 0))) return;
-    body += fila(nombre, s);
-  });
-  body += fila('Gerencia', ger, 'total-row');
+// ----- apartado "Clientes y ticket promedio" (Móvil, FO y SSPP) -----
+function evoCliCell(v, c, serv){
+  return `<td><div class="evo-v">${evoFmt(c)}</div><div class="evo-m">${evoFmt(v)} ${serv.corto}</div><span class="evo-tk">${evoTicket(v, c)}</span></td>`;
+}
+function evoCliFila(nombre, rows, last, serv, cls){
+  const v = evoSumaMeses(rows), c = evoSumaClientes(rows);
+  let tds = '';
+  for(let m=0;m<=last;m++) tds += evoCliCell(v[m], c[m], serv);
+  return `<tr class="${cls||''}"><td>${nombre}</td>${tds}${evoCliCell(evoAcumVenta(v, last), evoAcumVenta(c, last), serv)}</tr>`;
+}
+function evoCliTablaHTML(colNombre, body, last){
   let ths = '';
   for(let m=0;m<=last;m++) ths += `<th>${EVO_MESES_ABR[m]}</th>`;
-  return `
-    <div class="section-label">Evolutivo ${EVO_VENTAS.year || ''} — Móvil · Clientes y ticket promedio por Jefe Comercial</div>
-    <div class="general-table-wrap">
+  return `<div class="general-table-wrap">
       <table class="general evo-table">
-        <thead><tr class="sub-row"><th class="name-col">Jefe Comercial</th>${ths}<th>Acumulado ${evoRango(last)}</th></tr></thead>
+        <thead><tr class="sub-row"><th class="name-col">${colNombre}</th>${ths}<th>Acumulado ${evoRango(last)}</th></tr></thead>
         <tbody>${body}</tbody>
       </table>
-    </div>
-    <p class="evo-note">En cada celda: clientes del mes, líneas Voz vendidas y, en azul, el ticket promedio (líneas ÷ clientes). Los clientes se cuentan con la columna "Cuenta Rut" del archivo: un cliente cuenta una sola vez en el mes aunque tenga varias ventas. El acumulado suma los clientes de cada mes, así que un cliente que compró en dos meses distintos cuenta dos veces.</p>
-    <div class="evo-gap"></div>`;
+    </div>`;
+}
+function evoClientesVistaHTML(last){
+  const year = EVO_VENTAS.year || '';
+  const aviso = txt => `<div class="donut-card" style="max-width:560px;"><p style="font-size:0.9rem; color:var(--muted); margin:0;">${txt}</p></div>`;
+  if(!EVO_VENTAS.rows.some(r => Array.isArray(r.k))){
+    return aviso('Los datos guardados todavía no traen los clientes. Vuelve a subir el archivo Evolutivo en la pestaña "Cargar datos" para ver este apartado.');
+  }
+  const kpis = EVO_SERVICIOS.map(s=>{
+    const rows = EVO_VENTAS.rows.filter(r => r.s === s.key);
+    const label = 'Ticket promedio ' + s.label + ' ' + evoRango(last);
+    if(!rows.some(r => Array.isArray(r.k))) return { value: '—', label, sub: 'sin clientes cargados' };
+    const v = evoAcumVenta(evoSumaMeses(rows), last), c = evoAcumVenta(evoSumaClientes(rows), last);
+    return { value: evoTicket(v, c), label, sub: evoFmt(v) + ' ' + s.corto + ' en ' + evoFmt(c) + ' clientes' };
+  });
+  const serv = EVO_SERVICIOS.find(s => s.key === evoCliServ) || EVO_SERVICIOS[0];
+  const chips = EVO_SERVICIOS.map(s => `<button class="${s.key === serv.key ? 'active' : ''}" onclick="evoSetCliServ('${s.key}')">${s.label}</button>`).join('');
+  const rows = EVO_VENTAS.rows.filter(r => r.s === serv.key);
+  const cabeza = `${kpiRowHTML(kpis)}<div class="evo-chips">${chips}</div>`;
+  if(!rows.some(r => Array.isArray(r.k))){
+    return cabeza + aviso('Los datos guardados de ' + serv.label + ' todavía no traen los clientes. Vuelve a subir el archivo Evolutivo en la pestaña "Cargar datos".');
+  }
+
+  // 1) por Jefe Comercial
+  let bodyJefes = '';
+  for(let j=0;j<=JEFE_ORDER_KEYS.length;j++){
+    const rj = rows.filter(r => r.j === j);
+    if(!rj.length || (!evoSumaMeses(rj).some(x => x !== 0) && !evoSumaClientes(rj).some(x => x !== 0))) continue;
+    bodyJefes += evoCliFila(j < METAS_JEFES.length ? METAS_JEFES[j] : 'Sin Jefe Comercial reconocido', rj, last, serv);
+  }
+  bodyJefes += evoCliFila('Gerencia', rows, last, serv, 'total-row');
+
+  // 3) por proveedor
+  const grupos = {};
+  rows.forEach(r=>{ const k = r.p || ''; if(!grupos[k]) grupos[k] = []; grupos[k].push(r); });
+  const orden = n => { if(!n) return 99; const i = EVO_PROV_ORDEN.indexOf(n); return i < 0 ? 50 : i; };
+  let bodyProv = '';
+  Object.keys(grupos).sort((a,b) => (orden(a) - orden(b)) || a.localeCompare(b, 'es')).forEach(k=>{
+    if(!evoSumaMeses(grupos[k]).some(x => x !== 0)) return;
+    bodyProv += evoCliFila(k ? escapeHtmlAttr(k) : 'Sin proveedor', grupos[k], last, serv);
+  });
+  bodyProv += evoCliFila('Total ' + serv.label, rows, last, serv, 'total-row');
+
+  const comoCuenta = serv.key === 'movil'
+    ? 'Los clientes de Móvil se cuentan con la columna "Cuenta Rut" del archivo'
+    : 'Los clientes de ' + serv.label + ' se cuentan por RUT distinto dentro de cada mes';
+  return `
+    ${cabeza}
+    <div class="section-label">Evolutivo ${year} — Clientes y ticket promedio · Jefe Comercial — ${serv.label}</div>
+    ${evoCliTablaHTML('Jefe Comercial', bodyJefes, last)}
+    <p class="evo-note">En cada celda: clientes del mes, ${serv.corto} y, en azul, el ticket promedio (${serv.corto} ÷ clientes). ${comoCuenta}: un cliente cuenta una sola vez en el mes aunque tenga varias ventas. El acumulado suma los clientes de cada mes, así que un cliente que compró en dos meses distintos cuenta dos veces.</p>
+    <div class="evo-gap"></div>
+
+    ${evoSupHTML(last, 'clientes')}
+
+    <div class="section-label">Evolutivo ${year} — Clientes y ticket promedio · Proveedor — ${serv.label}</div>
+    ${evoCliTablaHTML('Proveedor', bodyProv, last)}
+    <p class="evo-note">Atento es el canal FVI; Wesell y Global son el canal FQ.</p>`;
+}
+function evoSetVista(k){
+  evoVista = k;
+  renderContent();
+}
+function evoSetCliServ(k){
+  evoCliServ = k;
+  const y = window.scrollY;
+  renderContent();
+  window.scrollTo(0, y);
 }
 
 // ----- vista por Jefe Comercial y Supervisor (FVI / FQ) y vista por proveedor -----
@@ -4227,7 +4324,7 @@ function evoThsMes(last){
   return ths + `<th class="evo-acum-col">Acumulado ${evoRango(last)}</th>`;
 }
 function evoSupTablaHTML(serv, canal, rows, last, metrica){
-  const unidad = metrica === 'clientes' ? 'clientes' : (metrica === 'ticket' ? 'ticket promedio (líneas por cliente)' : serv.unidad);
+  const unidad = metrica === 'clientes' ? 'clientes' : (metrica === 'ticket' ? 'ticket promedio (' + serv.corto + ' por cliente)' : serv.unidad);
   const titulo = canal ? 'Canal ' + canal : 'Sin canal';
   if(!rows.length || !evoSumaMeses(rows).some(x => x !== 0)){
     return `<div class="evo-sub-label">${titulo}</div><p class="evo-note" style="margin:0 0 6px;">Sin ventas de ${serv.label} en ${canal ? 'el canal ' + canal : 'filas sin canal'} en ${EVO_VENTAS.year}.</p>`;
@@ -4265,10 +4362,13 @@ function evoSupTablaHTML(serv, canal, rows, last, metrica){
       </table>
     </div>`;
 }
-function evoSupHTML(last){
+function evoSupHTML(last, modo){
   const year = EVO_VENTAS.year || '';
-  const serv = EVO_SERVICIOS.find(s => s.key === evoSupServ) || EVO_SERVICIOS[0];
-  const label = `<div class="section-label">Evolutivo ${year} — Venta por mes · Jefe Comercial y Supervisor, por canal (FVI / FQ)</div>`;
+  const esCli = modo === 'clientes';
+  const serv = EVO_SERVICIOS.find(s => s.key === (esCli ? evoCliServ : evoSupServ)) || EVO_SERVICIOS[0];
+  const label = esCli
+    ? `<div class="section-label">Evolutivo ${year} — Clientes y ticket promedio · Jefe Comercial y Supervisor, por canal (FVI / FQ) — ${serv.label}</div>`
+    : `<div class="section-label">Evolutivo ${year} — Venta por mes · Jefe Comercial y Supervisor, por canal (FVI / FQ)</div>`;
   if(!evoTieneDetalle()){
     return label + `<div class="donut-card" style="max-width:560px;"><p style="font-size:0.9rem; color:var(--muted); margin:0;">Los datos guardados todavía no traen el detalle por supervisor. Vuelve a subir el archivo Evolutivo en la pestaña "Cargar datos" para ver esta vista.</p></div><div class="evo-gap"></div>`;
   }
@@ -4276,14 +4376,14 @@ function evoSupHTML(last){
   const rows = EVO_VENTAS.rows.filter(r => r.s === serv.key);
   const canales = ['FVI','FQ'];
   rows.forEach(r=>{ const g = evoCanalGrupo(r); if(!canales.includes(g)) canales.push(g); });
-  const hayCli = rows.some(r => Array.isArray(r.k));
-  const metrica = hayCli ? evoSupMetrica : 'lineas';
-  const ops = [['lineas','Líneas'],['clientes','Clientes'],['ticket','Ticket promedio']];
-  const chipsMetrica = hayCli ? `<div class="evo-chips evo-chips-sm"><span class="evo-chips-lbl">Ver:</span>${ops.map(o => `<button class="${o[0] === metrica ? 'active' : ''}" onclick="evoSetSupMetrica('${o[0]}')">${o[1]}</button>`).join('')}</div>` : '';
+  const metrica = esCli ? (evoSupMetrica === 'ticket' ? 'ticket' : 'clientes') : 'lineas';
+  const ops = [['clientes','Clientes'],['ticket','Ticket promedio']];
+  const chipsMetrica = esCli ? `<div class="evo-chips evo-chips-sm" style="margin-top:0;"><span class="evo-chips-lbl">Ver:</span>${ops.map(o => `<button class="${o[0] === metrica ? 'active' : ''}" onclick="evoSetSupMetrica('${o[0]}')">${o[1]}</button>`).join('')}</div>` : '';
   const tablas = canales.map(c => evoSupTablaHTML(serv, c, rows.filter(r => evoCanalGrupo(r) === c), last, metrica)).join('');
 
-  const notas = ['Aquí se muestra solo la venta, porque las metas están cargadas por Jefe Comercial y no por supervisor. Dentro de cada jefe, los supervisores van de mayor a menor venta acumulada.'];
-  if(metrica !== 'lineas') notas.push('Los clientes se cuentan con la columna "Cuenta Rut" del archivo (un cliente cuenta una vez en el mes aunque tenga varias ventas). Ticket promedio = líneas Voz ÷ clientes.');
+  const notas = [esCli
+    ? 'Dentro de cada jefe, los supervisores van de mayor a menor venta acumulada. Si un cliente compró con dos supervisores en el mismo mes, cuenta solo para uno de ellos. Ticket promedio = ' + serv.corto + ' ÷ clientes.'
+    : 'Aquí se muestra solo la venta, porque las metas están cargadas por Jefe Comercial y no por supervisor. Dentro de cada jefe, los supervisores van de mayor a menor venta acumulada.'];
   const comoAtento = evoAcumVenta(evoSumaMeses(rows.filter(r => String(r.c || '').toUpperCase() === 'ATENTO')), last);
   if(comoAtento) notas.push('En el archivo, parte de ' + serv.label + ' viene con canal "Atento" (' + evoFmt(comoAtento) + '): va dentro de FVI, porque FVI es Atento.');
   const sinCanal = rows.filter(r => !String(r.c || '').trim());
@@ -4292,7 +4392,7 @@ function evoSupHTML(last){
   if(rows.some(r => evoNorm(r.u) === 'sup rm')) notas.push('La venta que figura a nombre de "Sup RM" se muestra como "Sin supervisor asignado".');
   return `
     ${label}
-    <div class="evo-chips">${chips}</div>
+    ${esCli ? '' : '<div class="evo-chips">' + chips + '</div>'}
     ${chipsMetrica}
     ${tablas}
     <p class="evo-note">${notas.join(' ')}</p>
@@ -4367,18 +4467,21 @@ function evolutivoHTML(){
       ? { value: evoFmt(ac.venta), label: s.label + ' acumulado ' + evoRango(last), sub: 'sin meta cargada' }
       : { value: ac.pct + '%', label: s.label + ' acumulado ' + evoRango(last), sub: evoFmt(ac.venta) + ' de ' + evoFmt(ac.meta) + ' ' + s.unidad, tone: pillClass(ac.pct) };
   });
-  const serMovil = evoSerie('movil', null);
-  if(serMovil.clientes){
-    const c = evoAcumCli(serMovil, last), v = evoAcum(serMovil, last).venta;
-    kpis.push({ value: evoTicket(v, c), label: 'Ticket promedio Móvil ' + evoRango(last), sub: evoFmt(v) + ' líneas en ' + evoFmt(c) + ' clientes' });
-  }
   const fmtFecha = iso => new Date(iso).toLocaleString('es-CL',{timeZone:'America/Santiago',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
   const cargas = [];
   if(EVO_VENTAS.updatedAt) cargas.push('Ventas cargadas el ' + fmtFecha(EVO_VENTAS.updatedAt));
   if(EVO_METAS.updatedAt) cargas.push('Metas cargadas el ' + fmtFecha(EVO_METAS.updatedAt));
   const chipsJefe = METAS_JEFES.map((n,j)=>`<button class="${j === evoJefeSel ? 'active' : ''}" onclick="evoSetJefe(${j})">${n}</button>`).join('');
 
+  const vistas = `<div class="evo-vistas">
+      <button class="${evoVista === 'clientes' ? '' : 'active'}" onclick="evoSetVista('ventas')">Ventas y cumplimiento</button>
+      <button class="${evoVista === 'clientes' ? 'active' : ''}" onclick="evoSetVista('clientes')">Clientes y ticket promedio</button>
+    </div>`;
+  const pie = cargas.length ? '<p class="evo-note">' + cargas.join(' · ') + '.</p>' : '';
+  if(evoVista === 'clientes') return vistas + evoClientesVistaHTML(last) + pie;
+
   return `
+    ${vistas}
     ${kpiRowHTML(kpis)}
     <div class="section-label">Evolutivo ${year} — Venta por mes · Gerencia</div>
     <div class="evo-grid">${EVO_SERVICIOS.map(s => evoCardHTML(s, null, last)).join('')}</div>
@@ -4386,15 +4489,13 @@ function evolutivoHTML(){
     ${evoTablaHTML(last)}
     <div class="evo-gap"></div>
 
-    ${evoClientesHTML(last)}
-
     <div class="section-label">Evolutivo ${year} — Venta por mes · Detalle de un Jefe Comercial</div>
     <div class="evo-chips">${chipsJefe}</div>
     <div class="evo-grid">${EVO_SERVICIOS.map(s => evoCardHTML(s, evoJefeSel, last)).join('')}</div>
 
-    ${evoSupHTML(last)}
+    ${evoSupHTML(last, 'ventas')}
     ${evoProvHTML(last)}
-    ${cargas.length ? '<p class="evo-note">' + cargas.join(' · ') + '.</p>' : ''}
+    ${pie}
   `;
 }
 
@@ -4406,7 +4507,7 @@ function renderEvolutivoCharts(){
     const items = Array.from(grid.querySelectorAll('.evo-chart')).map(el=>{
       const serv = EVO_SERVICIOS.find(s => s.key === el.dataset.serv);
       const jefe = el.dataset.jefe === '' ? null : Number(el.dataset.jefe);
-      return { el, serie: evoSerie(serv.key, jefe), titulo: serv.label + (jefe === null ? ' · Gerencia' : ' · ' + METAS_JEFES[jefe]) };
+      return { el, serie: Object.assign(evoSerie(serv.key, jefe), { clientes: null }), titulo: serv.label + (jefe === null ? ' · Gerencia' : ' · ' + METAS_JEFES[jefe]) };
     });
     // si con tres gráficos por fila los números no caben (muchos meses), se muestra uno por fila
     grid.classList.remove('evo-wide');
@@ -4478,7 +4579,7 @@ function renderCargarDatos(){
     ${evoVisible() ? `    <div class="section-label" style="margin-top:32px;">Cargar Evolutivo (ventas por mes)</div>
     <div class="donut-card" style="max-width:480px; margin-bottom:32px;">
       <p style="font-size:0.88rem; color:var(--muted); margin:0 0 16px;">
-        Selecciona el archivo Evolutivo (hojas Movil, Fijo y SSPP). Alimenta la pestaña Evolutivo con las ventas de cada mes por Jefe Comercial, Supervisor y proveedor, y con los clientes de Móvil (columna "Cuenta Rut"). Como el archivo es grande, puede tardar unos segundos.
+        Selecciona el archivo Evolutivo (hojas Movil, Fijo y SSPP). Alimenta la pestaña Evolutivo con las ventas de cada mes por Jefe Comercial, Supervisor y proveedor, y con los clientes de cada servicio para el ticket promedio (en Móvil con la columna "Cuenta Rut"; en FO y SSPP por RUT distinto en el mes). Como el archivo es grande, puede tardar unos segundos.
       </p>
       <input type="file" id="upload-file-evo" accept=".xlsx,.xls" style="margin-bottom:14px; width:100%; color:var(--text);">
       <input type="password" id="upload-password-evo" placeholder="Clave de carga" style="width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--line); border-radius:3px; color:var(--text); margin-bottom:14px;">
