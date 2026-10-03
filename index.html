@@ -162,7 +162,9 @@
     display:flex;
     gap:4px;
     padding: 18px 40px 0;
+    overflow-x:auto;
   }
+  nav.tabs button{ white-space:nowrap; flex:0 0 auto; }
   nav.tabs button{
     background:none;
     border:none;
@@ -528,6 +530,119 @@
     font-size:0.78rem;
     line-height:1.6;
   }
+
+
+  /* ---------- EVOLUTIVO ---------- */
+  .evo-grid{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap:16px;
+    margin-bottom:36px;
+  }
+  @media (max-width: 1100px){
+    .evo-grid{ grid-template-columns: 1fr; }
+  }
+  .evo-grid.evo-wide{ grid-template-columns: 1fr; }
+  .evo-card{
+    background: var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px 16px 10px;
+    box-shadow: var(--shadow-sm);
+    min-width:0;
+  }
+  .evo-card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .evo-card-title{
+    font-family: var(--font-display);
+    font-weight:700;
+    font-size:1rem;
+    color: var(--text);
+  }
+  .evo-card-unit{
+    font-family: var(--font-body);
+    font-weight:400;
+    font-size:0.75rem;
+    color: var(--muted);
+    margin-left:6px;
+  }
+  .evo-legend{
+    display:flex;
+    gap:12px;
+    font-size:0.72rem;
+    color: var(--muted);
+    align-items:center;
+  }
+  .evo-legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .evo-acum{
+    font-size:0.8rem;
+    color: var(--muted);
+    margin:6px 0 10px;
+  }
+  .evo-acum b{ color: var(--text); }
+  .evo-chart{ width:100%; }
+  .evo-chart svg{ display:block; font-family: var(--font-body); font-variant-numeric: tabular-nums; }
+  .evo-hit{ fill: transparent; cursor: default; outline:none; }
+  .evo-hit:hover, .evo-hit:focus{ fill: rgba(0,30,180,0.07); }
+  .evo-empty{
+    color: var(--muted);
+    font-size:0.85rem;
+    padding:28px 0 34px;
+    text-align:center;
+  }
+  .evo-chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin: 0 0 16px;
+  }
+  .evo-chips button{
+    background: var(--panel);
+    border:1px solid var(--line);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-weight:600;
+    font-size:0.82rem;
+    padding:7px 14px;
+    border-radius:20px;
+    cursor:pointer;
+  }
+  .evo-chips button.active{
+    background: var(--tigo-blue);
+    border-color: var(--tigo-blue);
+    color:#FFFFFF;
+  }
+  table.evo-table td .evo-v{ font-weight:700; font-size:0.9rem; color: var(--text); }
+  table.evo-table td .evo-m{ font-size:0.72rem; font-weight:400; color: var(--muted); margin:1px 0 4px; }
+  table.evo-table td.evo-nometa{ color: var(--muted); }
+  .evo-note{
+    font-size:0.78rem;
+    color: var(--muted);
+    margin:10px 0 0;
+    line-height:1.5;
+  }
+  #evo-tip{
+    position:fixed;
+    z-index:50;
+    pointer-events:none;
+    background:#16283D;
+    color:#FFFFFF;
+    border-radius:8px;
+    padding:9px 12px;
+    font-size:0.78rem;
+    line-height:1.5;
+    box-shadow: 0 6px 20px rgba(16,24,40,0.25);
+    display:none;
+    min-width:150px;
+  }
+  #evo-tip .t{ font-weight:600; margin-bottom:4px; color: rgba(255,255,255,0.8); }
+  #evo-tip .r{ display:flex; justify-content:space-between; gap:18px; }
+  #evo-tip .r b{ font-weight:700; }
 
   footer.note{
     padding: 20px 40px 40px;
@@ -1217,7 +1332,7 @@ function estado2HTML(){
 
 function renderTabs(){
   const tabsEl = document.getElementById('tabs');
-  const allTabs = [{key:'general', label:'Vista General'}, ...Object.keys(DATA).map(k=>({key:k, label:DATA[k].label})), {key:'funnel', label:'Avance de Funnel'}, {key:'cargar', label:'Cargar datos'}, {key:'descargar', label:'Descargar BBDD'}];
+  const allTabs = [{key:'general', label:'Vista General'}, ...Object.keys(DATA).map(k=>({key:k, label:DATA[k].label})), ...(evoVisible() ? [{key:'evolutivo', label:'Evolutivo'}] : []), {key:'funnel', label:'Avance de Funnel'}, {key:'cargar', label:'Cargar datos'}, {key:'descargar', label:'Descargar BBDD'}];
   tabsEl.innerHTML = allTabs.map(t=>{
     return `<button class="${t.key===activeTab?'active':''}" onclick="switchTab('${t.key}')">${t.label}</button>`;
   }).join('');
@@ -1288,6 +1403,11 @@ function switchTab(key){
 function renderContent(){
   if(activeTab === 'general'){
     renderGeneral();
+    return;
+  }
+  if(activeTab === 'evolutivo'){
+    document.getElementById('main-content').innerHTML = evolutivoHTML();
+    renderEvolutivoCharts();
     return;
   }
   if(activeTab === 'funnel'){
@@ -3317,6 +3437,631 @@ function ssppEquipoHTML(){
   `;
 }
 
+// ---------- EVOLUTIVO: ventas por mes vs meta (Gerencia y Jefe Comercial) ----------
+const EVO_MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const EVO_MESES_ABR = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const EVO_SERVICIOS = [
+  { key:'movil', label:'Móvil', unidad:'líneas (Q L)' },
+  { key:'fo',    label:'FO',    unidad:'órdenes terminadas' },
+  { key:'sspp',  label:'SSPP',  unidad:'NAV' }
+];
+// Jefes que ya no están: sus metas (y sus ventas, que en la base ya figuran a nombre del jefe actual) se suman al jefe que heredó sus cifras.
+// clave = primer nombre del bloque en el archivo de metas; valor = primer nombre del Jefe Comercial actual.
+const EVO_ALIAS_JEFES = { 'carlos': 'hernan' };
+// Mientras el Evolutivo está en revisión, solo se ve entrando con el enlace que termina en ?evolutivo=1
+// Cuando esté listo para todos, cambiar a true.
+const EVO_PUBLICADO = false;
+function evoVisible(){
+  return EVO_PUBLICADO || /[?&]evolutivo=1(&|$)/.test(window.location.search);
+}
+const EVO_BAR_COLOR = '#3B6FE0';
+const EVO_META_COLOR = '#16283D';
+
+// Valores iniciales (archivos Evolutivo y Metas_Anual entregados); se reemplazan con lo que se suba en "Cargar datos".
+let EVO_VENTAS = {"year": 2026, "updatedAt": null, "rows": [
+  {"s": "fo", "j": 0, "c": "", "m": [3, 9, 2, 1, 5, 3, 7, 0, 0, 0, 0, 0]}, 
+  {"s": "fo", "j": 0, "c": "FVI", "m": [0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0]}, 
+  {"s": "fo", "j": 1, "c": "", "m": [5, 8, 10, 6, 5, 1, 3, 0, 0, 0, 0, 0]}, 
+  {"s": "fo", "j": 1, "c": "FVI", "m": [0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0]}, 
+  {"s": "fo", "j": 2, "c": "", "m": [3, 9, 0, 2, 3, 0, 0, 0, 0, 0, 0, 0]}, 
+  {"s": "fo", "j": 2, "c": "FQ", "m": [118, 120, 151, 130, 124, 98, 85, 77, 95, 0, 0, 0]}, 
+  {"s": "fo", "j": 2, "c": "FVI", "m": [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]}, 
+  {"s": "fo", "j": 3, "c": "", "m": [1, 7, 4, 3, 2, 0, 2, 0, 0, 0, 0, 0]}, 
+  {"s": "fo", "j": 3, "c": "FVI", "m": [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]}, 
+  {"s": "fo", "j": 4, "c": "FQ", "m": [371, 327, 428, 364, 333, 332, 268, 333, 344, 0, 0, 0]}, 
+  {"s": "fo", "j": 5, "c": "", "m": [8, 5, 6, 7, 2, 0, 6, 0, 0, 0, 0, 0]}, 
+  {"s": "fo", "j": 5, "c": "FVI", "m": [0, 0, 0, 0, 0, 0, 0, 6, 3, 0, 0, 0]}, 
+  {"s": "movil", "j": 0, "c": "FVI", "m": [58, 47, 62, 13, 39, 32, 71, 79, 54, 0, 0, 0]}, 
+  {"s": "movil", "j": 1, "c": "FVI", "m": [104, 80, 258, 49, 99, 91, 71, 114, 62, 0, 0, 0]}, 
+  {"s": "movil", "j": 2, "c": "FQ", "m": [168, 154, 151, 148, 90, 178, 224, 305, 219, 0, 0, 0]}, 
+  {"s": "movil", "j": 2, "c": "FVI", "m": [56, 114, 42, 107, 49, 31, 34, 35, 36, 0, 0, 0]}, 
+  {"s": "movil", "j": 3, "c": "FVI", "m": [77, 82, 38, 98, 56, 59, 100, 70, 59, 0, 0, 0]}, 
+  {"s": "movil", "j": 4, "c": "FQ", "m": [0, 0, 0, 337, 211, 223, 158, 306, 649, 0, 0, 0]}, 
+  {"s": "movil", "j": 5, "c": "FQ", "m": [316, 222, 281, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, 
+  {"s": "movil", "j": 5, "c": "FVI", "m": [188, 106, 132, 44, 68, 91, 161, 76, 151, 0, 0, 0]}, 
+  {"s": "sspp", "j": 0, "c": "ATENTO", "m": [0, 0, 0, 0, 762, 193, 1476, 965.84, 1496, 0, 0, 0]}, 
+  {"s": "sspp", "j": 0, "c": "FVI", "m": [598, 283, 477, 504, 0, 0, 0, 0, 0, 0, 0, 0]}, 
+  {"s": "sspp", "j": 1, "c": "ATENTO", "m": [0, 0, 0, 0, 972, 835, 1798, 1261.44, 671, 0, 0, 0]}, 
+  {"s": "sspp", "j": 1, "c": "FVI", "m": [2128, 927, 1367, 1528, 0, 0, 0, 0, 0, 0, 0, 0]}, 
+  {"s": "sspp", "j": 2, "c": "ATENTO", "m": [0, 0, 0, 0, 1046, 1046, 218, 762.16, 57, 0, 0, 0]}, 
+  {"s": "sspp", "j": 2, "c": "FVI", "m": [1726, 1053, 539, 1632, 0, 0, 0, 0, 0, 0, 0, 0]}, 
+  {"s": "sspp", "j": 3, "c": "ATENTO", "m": [0, 0, 0, 0, 116, 1321, 2129, 1806.3, 1585, 0, 0, 0]}, 
+  {"s": "sspp", "j": 3, "c": "FVI", "m": [1331, 1163, 1319, 683, 0, 0, 0, 0, 0, 0, 0, 0]}, 
+  {"s": "sspp", "j": 5, "c": "ATENTO", "m": [0, 0, 0, 0, 1116, 628, 645, 999.44, 1566, 0, 0, 0]}, 
+  {"s": "sspp", "j": 5, "c": "FVI", "m": [975, 430, 735, 348, 0, 0, 0, 0, 0, 0, 0, 0]}
+]};
+let EVO_METAS = {"updatedAt": null, "gerencia": {"movil": [1150, 1030, 1250, 1200, 1050, 950, 850, 800, 960, 940, 0, 0], "fo": [515, 470, 630, 580, 530, 500, 370, 360, 440, 475, 0, 0], "sspp": [8750, 8500, 7500, 5000, 6000, 6000, 5500, 5000, 4500, 4500, 0, 0]}, "jefes": [
+  {"j": 0, "c": "FVI", "movil": [120, 95, 105, 75, 60, 60, 55, 50, 60, 60, 0, 0], "fo": [0, 3, 10, 14, 7, 5, 4, 5, 7, 5, 0, 0], "sspp": [750, 750, 600, 400, 750, 850, 800, 650, 600, 650, 0, 0]}, 
+  {"j": 1, "c": "FVI", "movil": [120, 105, 140, 130, 100, 100, 95, 85, 90, 80, 0, 0], "fo": [0, 3, 10, 14, 8, 5, 5, 5, 7, 5, 0, 0], "sspp": [1350, 1400, 1200, 900, 1250, 1250, 1200, 950, 900, 950, 0, 0]}, 
+  {"j": 2, "c": "FVI", "movil": [150, 135, 160, 150, 130, 110, 110, 90, 80, 80, 0, 0], "fo": [0, 0, 10, 0, 0, 0, 1, 0, 2, 0, 0, 0], "sspp": [2100, 2050, 1950, 1200, 1600, 1600, 1400, 1350, 1150, 950, 0, 0]}, 
+  {"j": 2, "c": "FQ", "movil": [130, 120, 180, 200, 185, 180, 160, 165, 190, 200, 0, 0], "fo": [120, 105, 150, 130, 135, 130, 105, 100, 95, 125, 0, 0], "sspp": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, 
+  {"j": 4, "c": "FQ", "movil": [0, 0, 0, 300, 315, 300, 240, 235, 350, 340, 0, 0], "fo": [395, 350, 420, 380, 365, 350, 245, 240, 315, 330, 0, 0], "sspp": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, 
+  {"j": 3, "c": "FVI", "movil": [160, 135, 170, 150, 100, 70, 75, 70, 75, 70, 0, 0], "fo": [0, 3, 10, 14, 7, 5, 5, 5, 7, 5, 0, 0], "sspp": [2400, 2100, 1950, 1100, 1000, 900, 1050, 1000, 900, 950, 0, 0]}, 
+  {"j": 5, "c": "FVI", "movil": [110, 95, 115, 100, 160, 130, 115, 105, 115, 110, 0, 0], "fo": [0, 3, 10, 14, 8, 5, 5, 5, 7, 5, 0, 0], "sspp": [1050, 1100, 900, 800, 1400, 1400, 1050, 1050, 950, 1000, 0, 0]}, 
+  {"j": 5, "c": "FQ", "movil": [260, 250, 270, 0, 0, 0, 0, 0, 0, 0, 0, 0], "fo": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "sspp": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, 
+  {"j": 5, "c": "", "de": "Carlos", "movil": [100, 95, 110, 95, 0, 0, 0, 0, 0, 0, 0, 0], "fo": [0, 3, 10, 14, 0, 0, 0, 0, 0, 0, 0, 0], "sspp": [1100, 1100, 900, 600, 0, 0, 0, 0, 0, 0, 0, 0]}
+]};
+
+let evoJefeSel = 0;
+let evoTablaServ = 'movil';
+
+function evoNorm(v){
+  return normalizeName(String(v === undefined || v === null ? '' : v)).trim().replace(/\s+/g,' ');
+}
+function evoMesIndex(v){
+  if(typeof v === 'number' && v >= 1 && v <= 12) return Math.round(v) - 1;
+  const n = evoNorm(v);
+  if(!n) return -1;
+  for(let i=0;i<12;i++){ if(evoNorm(EVO_MESES[i]) === n) return i; }
+  for(let i=0;i<12;i++){ if(n.length >= 3 && evoNorm(EVO_MESES[i]).startsWith(n.slice(0,3)) && n.length <= 4) return i; }
+  return -1;
+}
+function evoNum(v){
+  if(typeof v === 'number') return isFinite(v) ? v : 0;
+  if(v === undefined || v === null || v instanceof Date) return 0;
+  const n = Number(String(v).trim().replace(',', '.'));
+  return isFinite(n) ? n : 0;
+}
+function evoFindCol(hdr, names){
+  const norm = hdr.map(evoNorm);
+  for(const n of names){
+    const i = norm.indexOf(n);
+    if(i >= 0) return i;
+  }
+  return -1;
+}
+// La hoja SSPP trae "AÑO" (ingreso) y "Año" (cierre): se usa la de cierre.
+function evoFindYearCol(hdr){
+  const idxs = [];
+  hdr.forEach((h,i)=>{ if(evoNorm(h) === 'ano') idxs.push(i); });
+  if(!idxs.length) return -1;
+  const exact = idxs.filter(i => String(hdr[i]).trim() === 'Año');
+  return exact.length ? exact[exact.length-1] : idxs[idxs.length-1];
+}
+function evoJefeIdx(name){
+  const n = String(name === undefined || name === null ? '' : name).trim();
+  return n ? jefeSortIndex(n) : JEFE_ORDER_KEYS.length;
+}
+
+function computeEvolutivoFromWorkbook(wb){
+  const defs = {
+    movil: { jefe:['jefe comercial'], valor:['q l'], cuentaFilas:false },
+    fo:    { jefe:['jc','jefe comercial'], valor:['cuenta'], cuentaFilas:true },
+    sspp:  { jefe:['jefe comercial'], valor:['nav gestion'], cuentaFilas:false }
+  };
+  const hojas = {};
+  wb.SheetNames.forEach(name=>{
+    const n = evoNorm(name);
+    if(n.includes('movil') || n.includes('voz')) hojas.movil = hojas.movil || name;
+    else if(n.includes('sspp')) hojas.sspp = hojas.sspp || name;
+    else if(n.includes('fijo') || n === 'fo' || n.includes('fibra')) hojas.fo = hojas.fo || name;
+  });
+  const faltan = EVO_SERVICIOS.filter(s => !hojas[s.key]).map(s => s.key === 'fo' ? 'Fijo' : s.label);
+  if(faltan.length === EVO_SERVICIOS.length) throw new Error('no encontré las hojas Movil, Fijo y SSPP en el archivo.');
+
+  // 1) leer filas de cada hoja
+  const filas = []; // {s, j, c, mes, year, v}
+  const avisos = [];
+  const yearCount = {};
+  EVO_SERVICIOS.forEach(serv=>{
+    const sheetName = hojas[serv.key];
+    if(!sheetName) return;
+    const data = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {header:1, defval:null, blankrows:false});
+    if(!data.length) return;
+    const hdr = data[0].map(h => h === null ? '' : h);
+    const d = defs[serv.key];
+    const cJefe = evoFindCol(hdr, d.jefe);
+    const cMes = evoFindCol(hdr, ['mes cierre']);
+    const cCanal = evoFindCol(hdr, ['canal']);
+    const cVal = evoFindCol(hdr, d.valor);
+    const cYear = evoFindYearCol(hdr);
+    if(cJefe < 0 || cMes < 0 || (cVal < 0 && !d.cuentaFilas)){
+      throw new Error('en la hoja "' + sheetName + '" faltan columnas (Jefe Comercial, MES CIERRE o ' + d.valor[0].toUpperCase() + ').');
+    }
+    let sinMes = 0;
+    for(let r=1;r<data.length;r++){
+      const row = data[r];
+      if(!row) continue;
+      const mes = evoMesIndex(row[cMes]);
+      if(mes < 0){ if(row.some(x => x !== null && x !== '')) sinMes++; continue; }
+      let v;
+      if(d.cuentaFilas){
+        const raw = cVal >= 0 ? row[cVal] : null;
+        v = (raw === null || raw === '' || !isFinite(Number(raw))) ? 1 : Number(raw);
+      } else {
+        v = evoNum(row[cVal]);
+      }
+      const year = cYear >= 0 ? parseInt(row[cYear], 10) : NaN;
+      if(isFinite(year)) yearCount[year] = (yearCount[year] || 0) + 1;
+      filas.push({ s: serv.key, j: evoJefeIdx(row[cJefe]), c: (cCanal < 0 || row[cCanal] === null || row[cCanal] === undefined) ? '' : String(row[cCanal]).trim().toUpperCase(), mes, year: isFinite(year) ? year : null, v });
+    }
+    if(sinMes) avisos.push(sinMes + ' fila(s) de ' + serv.label + ' sin MES CIERRE válido no se contaron');
+  });
+
+  // 2) quedarse con el año que más se repite
+  let year = null, best = -1;
+  Object.keys(yearCount).forEach(y=>{ if(yearCount[y] > best){ best = yearCount[y]; year = Number(y); } });
+  let otrosAnios = 0;
+  const agg = {};
+  filas.forEach(f=>{
+    if(year !== null && f.year !== null && f.year !== year){ otrosAnios++; return; }
+    const k = f.s + '|' + f.j + '|' + f.c;
+    if(!agg[k]) agg[k] = { s:f.s, j:f.j, c:f.c, m:new Array(12).fill(0) };
+    agg[k].m[f.mes] += f.v;
+  });
+  if(otrosAnios) avisos.push(otrosAnios + ' fila(s) de otros años no se contaron');
+  if(faltan.length) avisos.push('no venía la hoja ' + faltan.join(', '));
+  const rows = Object.keys(agg).sort().map(k=>{
+    const a = agg[k];
+    a.m = a.m.map(x => Math.round(x*100)/100);
+    return a;
+  });
+  if(!rows.length) throw new Error('el archivo no tiene filas con MES CIERRE.');
+  return { year: year || new Date().getFullYear(), rows, avisos, filas: filas.length - otrosAnios };
+}
+
+function computeMetasAnualFromWorkbook(wb){
+  const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, defval:null, blankrows:false});
+  const out = { gerencia: null, jefes: [] };
+  const avisos = [];
+  let cur = null, labelCol = 0, mesCols = null;
+  const servDe = lab => {
+    const n = evoNorm(lab);
+    if(!n) return null;
+    if(n.includes('sspp')) return 'sspp';
+    if(n.includes('voz') || n.includes('movil')) return 'movil';
+    if(n === 'fo' || n.includes('fibra') || n.includes('fij')) return 'fo';
+    return null;
+  };
+  data.forEach(row=>{
+    if(!row) return;
+    const norm = row.map(evoNorm);
+    const iEnero = norm.indexOf('enero');
+    if(iEnero >= 0){
+      // fila de encabezado de un bloque: "<Nombre> | Enero | Febrero | ..."
+      mesCols = new Array(12).fill(-1);
+      norm.forEach((c,i)=>{ const m = EVO_MESES.findIndex(x => evoNorm(x) === c); if(m >= 0 && mesCols[m] < 0) mesCols[m] = i; });
+      labelCol = 0;
+      for(let i=0;i<iEnero;i++){ if(norm[i]) labelCol = i; }
+      const nombre = String(row[labelCol] === null ? '' : row[labelCol]).trim();
+      const n = evoNorm(nombre);
+      if(n.startsWith('region') || n.startsWith('gerencia') || n.startsWith('total')){
+        cur = { tipo:'gerencia', movil:new Array(12).fill(0), fo:new Array(12).fill(0), sspp:new Array(12).fill(0) };
+        out.gerencia = cur;
+      } else {
+        const tokens = n.split(' ');
+        const canal = tokens.includes('fq') ? 'FQ' : (tokens.includes('fvi') ? 'FVI' : '');
+        const alias = EVO_ALIAS_JEFES[tokens[0]];
+        let j = JEFE_ORDER_KEYS.findIndex(k => k.split(' ')[0] === (alias || tokens[0]));
+        if(j < 0){ const t = jefeSortIndex(nombre); j = t < JEFE_ORDER_KEYS.length ? t : -1; }
+        if(j < 0){ avisos.push('no reconocí el bloque "' + nombre + '"'); cur = null; return; }
+        cur = { tipo:'jefe', j, c: canal, de: alias ? nombre : null, movil:new Array(12).fill(0), fo:new Array(12).fill(0), sspp:new Array(12).fill(0) };
+        out.jefes.push(cur);
+      }
+      return;
+    }
+    if(!cur || !mesCols) return;
+    const serv = servDe(row[labelCol]);
+    if(!serv) return;
+    for(let m=0;m<12;m++){ if(mesCols[m] >= 0) cur[serv][m] = evoNum(row[mesCols[m]]); }
+  });
+  if(!out.gerencia && !out.jefes.length) throw new Error('no encontré bloques de metas (una fila con el nombre y los meses Enero, Febrero, ...).');
+  const clean = b => ({ movil:b.movil, fo:b.fo, sspp:b.sspp });
+  return {
+    gerencia: out.gerencia ? clean(out.gerencia) : null,
+    jefes: out.jefes.map(b => Object.assign({ j:b.j, c:b.c }, b.de ? { de:b.de } : {}, clean(b))),
+    avisos
+  };
+}
+
+function isValidEvoVentas(d){
+  return d && Array.isArray(d.rows) && d.rows.every(r => r && typeof r.s === 'string' && Array.isArray(r.m) && r.m.length === 12);
+}
+function isValidEvoMetas(d){
+  const ok = b => b && ['movil','fo','sspp'].every(k => Array.isArray(b[k]) && b[k].length === 12);
+  return d && Array.isArray(d.jefes) && d.jefes.every(ok) && (d.gerencia === null || d.gerencia === undefined || ok(d.gerencia));
+}
+
+async function loadRemoteEvolutivo(){
+  try{
+    const [rv, rm] = await Promise.all([fetch('/api/get-data?key=evolutivo-data'), fetch('/api/get-data?key=evolutivo-metas')]);
+    let changed = false;
+    if(rv.ok){ const j = await rv.json(); if(isValidEvoVentas(j) && j.rows.length){ EVO_VENTAS = j; changed = true; } }
+    if(rm.ok){ const j = await rm.json(); if(isValidEvoMetas(j) && (j.gerencia || j.jefes.length)){ EVO_METAS = j; changed = true; } }
+    if(changed && activeTab === 'evolutivo') renderContent();
+  } catch(e){
+    console.log('Sin evolutivo guardado todavía; se usan los valores iniciales.');
+  }
+}
+
+async function evoSave(key, data, password){
+  const res = await fetch('/api/save-data', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ password, key, data })
+  });
+  const result = await res.json();
+  if(!res.ok) throw new Error(result.error || 'no se pudo guardar. Revisa la clave.');
+}
+
+async function handleUploadEvolutivo(){
+  const fileInput = document.getElementById('upload-file-evo');
+  const pass = document.getElementById('upload-password-evo').value;
+  const statusEl = document.getElementById('upload-status-evo');
+  if(!fileInput.files.length){ statusEl.textContent = 'Selecciona un archivo primero.'; return; }
+  if(!pass){ statusEl.textContent = 'Ingresa la clave de carga.'; return; }
+  statusEl.textContent = 'Procesando archivo (puede tardar unos segundos)...';
+  try{
+    await new Promise(r => setTimeout(r, 30));
+    const buf = await fileInput.files[0].arrayBuffer();
+    const wb = XLSX.read(buf, {type:'array'});
+    const c = computeEvolutivoFromWorkbook(wb);
+    const data = { year: c.year, updatedAt: new Date().toISOString(), rows: c.rows };
+    statusEl.textContent = 'Subiendo datos...';
+    await evoSave('evolutivo-data', data, pass);
+    EVO_VENTAS = data;
+    statusEl.textContent = 'Listo. Evolutivo ' + c.year + ' actualizado (' + c.filas.toLocaleString('es-CL') + ' filas leídas).' + (c.avisos.length ? ' Aviso: ' + c.avisos.join('; ') + '.' : '');
+  } catch(e){
+    statusEl.textContent = 'Error: ' + e.message;
+  }
+}
+
+async function handleUploadMetasAnual(){
+  const fileInput = document.getElementById('upload-file-evometas');
+  const pass = document.getElementById('upload-password-evometas').value;
+  const statusEl = document.getElementById('upload-status-evometas');
+  if(!fileInput.files.length){ statusEl.textContent = 'Selecciona un archivo primero.'; return; }
+  if(!pass){ statusEl.textContent = 'Ingresa la clave de carga.'; return; }
+  statusEl.textContent = 'Procesando archivo...';
+  try{
+    const buf = await fileInput.files[0].arrayBuffer();
+    const wb = XLSX.read(buf, {type:'array'});
+    const c = computeMetasAnualFromWorkbook(wb);
+    const data = { updatedAt: new Date().toISOString(), gerencia: c.gerencia, jefes: c.jefes };
+    statusEl.textContent = 'Subiendo metas...';
+    await evoSave('evolutivo-metas', data, pass);
+    EVO_METAS = data;
+    statusEl.textContent = 'Listo. Metas anuales actualizadas (' + (c.gerencia ? 'Gerencia + ' : '') + c.jefes.length + ' bloques de Jefe Comercial).' + (c.avisos.length ? ' Aviso: ' + c.avisos.join('; ') + '.' : '');
+  } catch(e){
+    statusEl.textContent = 'Error: ' + e.message;
+  }
+}
+
+// ----- series -----
+function evoFmt(n){ return Math.round(n).toLocaleString('es-CL'); }
+function evoPct(v, meta){ return meta > 0 ? Math.round((v/meta)*100) : null; }
+
+// jefe = null -> Gerencia (todas las filas); jefe = 0..5 -> ese Jefe Comercial (FVI + FQ)
+function evoSerie(serv, jefe){
+  const venta = new Array(12).fill(0), meta = new Array(12).fill(0);
+  EVO_VENTAS.rows.forEach(r=>{
+    if(r.s !== serv) return;
+    if(jefe !== null && r.j !== jefe) return;
+    for(let m=0;m<12;m++) venta[m] += r.m[m] || 0;
+  });
+  if(jefe === null && EVO_METAS.gerencia){
+    for(let m=0;m<12;m++) meta[m] = EVO_METAS.gerencia[serv][m] || 0;
+  } else {
+    EVO_METAS.jefes.forEach(b=>{
+      if(jefe !== null && b.j !== jefe) return;
+      for(let m=0;m<12;m++) meta[m] += b[serv][m] || 0;
+    });
+  }
+  return { venta, meta };
+}
+// último mes (0-11) con alguna venta cargada, en cualquier servicio
+function evoUltimoMes(){
+  let last = -1;
+  EVO_VENTAS.rows.forEach(r=>{ for(let m=0;m<12;m++){ if(r.m[m] > 0 && m > last) last = m; } });
+  return last;
+}
+function evoAcum(serie, last){
+  let v = 0, mt = 0;
+  for(let m=0;m<=last;m++){ v += serie.venta[m]; mt += serie.meta[m]; }
+  return { venta: v, meta: mt, pct: evoPct(v, mt) };
+}
+function evoRango(last){ return last <= 0 ? EVO_MESES_ABR[0] : EVO_MESES_ABR[0] + '–' + EVO_MESES_ABR[last]; }
+function evoStatusColor(pct){
+  const cs = getComputedStyle(document.documentElement);
+  if(pct >= 95) return cs.getPropertyValue('--green').trim();
+  if(pct >= 80) return cs.getPropertyValue('--amber').trim();
+  return cs.getPropertyValue('--red').trim();
+}
+
+// ----- gráfico: barras = venta, línea = meta, y debajo la tabla alineada Venta / Meta / % Cump -----
+function evoTicks(maxVal){
+  if(maxVal <= 0) return { step: 1, max: 4 };
+  const raw = maxVal / 4;
+  const p = Math.pow(10, Math.floor(Math.log10(raw)));
+  const f = raw / p;
+  const step = (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p;
+  return { step, max: step * Math.ceil(maxVal / step) };
+}
+
+// tamaño de letra de las filas Venta / Meta / % Cump: que el número más largo quepa en el ancho de cada mes
+function evoRawFs(serie, n, band){
+  let maxChars = 4;
+  for(let i=0;i<n;i++){
+    const p = evoPct(serie.venta[i], serie.meta[i]);
+    maxChars = Math.max(maxChars, evoFmt(serie.venta[i]).length, evoFmt(serie.meta[i]).length, p === null ? 0 : String(p).length + 2);
+  }
+  return Math.floor(((band - 4) / (maxChars * 0.58)) * 2) / 2;
+}
+const EVO_GUT = 50, EVO_PAD_R = 4;
+
+function evoChartSVG(serie, last, W, titulo){
+  const n = last + 1;
+  const gut = EVO_GUT, padR = EVO_PAD_R, top = 10, plotH = 160;
+  const band = (W - gut - padR) / n;
+  const bw = Math.min(24, Math.max(6, band * 0.6));
+  const fs = Math.max(8.5, Math.min(10.5, evoRawFs(serie, n, band)));
+  const y0 = top + plotH;
+  const H = y0 + 82;
+  let maxVal = 0;
+  for(let i=0;i<n;i++) maxVal = Math.max(maxVal, serie.venta[i], serie.meta[i]);
+  const tk = evoTicks(maxVal);
+  const y = v => y0 - (v / tk.max) * plotH;
+  const cx = i => gut + i*band + band/2;
+  const muted = '#64748B', ink = '#1A2733', line = '#DBE3EC';
+  let g = '';
+
+  for(let t=0; t<=tk.max + tk.step/2; t+=tk.step){
+    const yy = y(t).toFixed(1);
+    g += `<line x1="${gut}" x2="${W-padR}" y1="${yy}" y2="${yy}" stroke="${line}" stroke-width="1"/>`;
+    g += `<text x="${gut-7}" y="${(y(t)+3.5).toFixed(1)}" text-anchor="end" font-size="10" fill="${muted}">${evoFmt(t)}</text>`;
+  }
+  // barras (venta)
+  for(let i=0;i<n;i++){
+    const v = serie.venta[i];
+    if(v <= 0) continue;
+    const x = cx(i) - bw/2, yt = y(v), h = y0 - yt;
+    const r = Math.min(4, h, bw/2);
+    g += `<path d="M${x.toFixed(1)},${y0} V${(yt+r).toFixed(1)} Q${x.toFixed(1)},${yt.toFixed(1)} ${(x+r).toFixed(1)},${yt.toFixed(1)} H${(x+bw-r).toFixed(1)} Q${(x+bw).toFixed(1)},${yt.toFixed(1)} ${(x+bw).toFixed(1)},${(yt+r).toFixed(1)} V${y0} Z" fill="${EVO_BAR_COLOR}"/>`;
+  }
+  // línea de meta (solo meses con meta > 0), con halo blanco para que se lea sobre las barras
+  let run = [];
+  const flush = ()=>{
+    if(run.length > 1){
+      const pts = run.map(i => cx(i).toFixed(1) + ',' + y(serie.meta[i]).toFixed(1)).join(' ');
+      g += `<polyline points="${pts}" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>`;
+      g += `<polyline points="${pts}" fill="none" stroke="${EVO_META_COLOR}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    }
+    run = [];
+  };
+  for(let i=0;i<n;i++){ if(serie.meta[i] > 0) run.push(i); else flush(); }
+  flush();
+  for(let i=0;i<n;i++){
+    if(serie.meta[i] > 0) g += `<circle cx="${cx(i).toFixed(1)}" cy="${y(serie.meta[i]).toFixed(1)}" r="4" fill="${EVO_META_COLOR}" stroke="#FFFFFF" stroke-width="2"/>`;
+  }
+  // eje X + filas alineadas
+  g += `<line x1="${gut}" x2="${W-padR}" y1="${y0}" y2="${y0}" stroke="#B9C4D0" stroke-width="1"/>`;
+  g += `<line x1="0" x2="${W-padR}" y1="${y0+24}" y2="${y0+24}" stroke="${line}" stroke-width="1"/>`;
+  const rows = [['Venta', y0+40], ['Meta', y0+56], ['% Cump', y0+72]];
+  rows.forEach(r=>{ g += `<text x="0" y="${r[1]}" font-size="${fs}" fill="${muted}">${r[0]}</text>`; });
+  for(let i=0;i<n;i++){
+    const v = serie.venta[i], mt = serie.meta[i], p = evoPct(v, mt);
+    const x = cx(i).toFixed(1);
+    g += `<text x="${x}" y="${y0+16}" text-anchor="middle" font-size="${fs}" fill="${muted}">${EVO_MESES_ABR[i]}</text>`;
+    g += `<text x="${x}" y="${y0+40}" text-anchor="middle" font-size="${fs}" font-weight="600" fill="${ink}">${evoFmt(v)}</text>`;
+    g += `<text x="${x}" y="${y0+56}" text-anchor="middle" font-size="${fs}" fill="${muted}">${mt > 0 ? evoFmt(mt) : '—'}</text>`;
+    g += p === null
+      ? `<text x="${x}" y="${y0+72}" text-anchor="middle" font-size="${fs}" fill="${muted}">—</text>`
+      : `<text x="${x}" y="${y0+72}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="${evoStatusColor(p)}">${p}%</text>`;
+  }
+  // zonas de hover / foco (una por mes, de alto completo)
+  for(let i=0;i<n;i++){
+    const v = serie.venta[i], mt = serie.meta[i], p = evoPct(v, mt);
+    const aria = `${EVO_MESES[i]}: venta ${evoFmt(v)}, meta ${mt > 0 ? evoFmt(mt) : 'sin meta'}${p === null ? '' : ', cumplimiento ' + p + '%'}`;
+    g += `<rect class="evo-hit" tabindex="0" role="img" aria-label="${aria}" x="${(gut+i*band).toFixed(1)}" y="${top}" width="${band.toFixed(1)}" height="${H-top}" data-t="${escapeHtmlAttr(EVO_MESES[i] + ' · ' + titulo)}" data-v="${v}" data-m="${mt}" onpointermove="evoTipShow(event,this)" onpointerleave="evoTipHide()" onfocus="evoTipShow(null,this)" onblur="evoTipHide()"/>`;
+  }
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="group" aria-label="Venta mensual y meta: ${escapeHtmlAttr(titulo)}">${g}</svg>`;
+}
+
+function evoTipShow(ev, el){
+  let tip = document.getElementById('evo-tip');
+  if(!tip){ tip = document.createElement('div'); tip.id = 'evo-tip'; document.body.appendChild(tip); }
+  const v = Number(el.dataset.v), mt = Number(el.dataset.m), p = evoPct(v, mt);
+  tip.textContent = '';
+  const add = (cls, a, b) => {
+    const d = document.createElement('div'); d.className = cls;
+    if(b === undefined){ d.textContent = a; }
+    else { const s = document.createElement('span'); s.textContent = a; const st = document.createElement('b'); st.textContent = b; d.appendChild(s); d.appendChild(st); }
+    tip.appendChild(d);
+  };
+  add('t', el.dataset.t);
+  add('r', 'Venta', evoFmt(v));
+  add('r', 'Meta', mt > 0 ? evoFmt(mt) : 'sin meta');
+  if(p !== null){
+    add('r', '% Cumplimiento', p + '%');
+    const dif = Math.round(v) - Math.round(mt);
+    add('r', dif >= 0 ? 'Sobre la meta' : 'Bajo la meta', (dif >= 0 ? '+' : '−') + Math.abs(dif).toLocaleString('es-CL'));
+  }
+  tip.style.display = 'block';
+  let x, yy;
+  if(ev){ x = ev.clientX + 14; yy = ev.clientY + 14; }
+  else { const b = el.getBoundingClientRect(); x = b.right + 6; yy = b.top + 20; }
+  const tw = tip.offsetWidth, th = tip.offsetHeight;
+  if(x + tw > window.innerWidth - 8) x = Math.max(8, (ev ? ev.clientX : x) - tw - 14);
+  if(yy + th > window.innerHeight - 8) yy = Math.max(8, window.innerHeight - th - 8);
+  tip.style.left = x + 'px';
+  tip.style.top = yy + 'px';
+}
+function evoTipHide(){
+  const tip = document.getElementById('evo-tip');
+  if(tip) tip.style.display = 'none';
+}
+
+function evoLegendHTML(){
+  return `<div class="evo-legend">
+    <span><svg width="12" height="12" aria-hidden="true"><rect x="1" y="1" width="10" height="10" rx="2" fill="${EVO_BAR_COLOR}"/></svg>Venta</span>
+    <span><svg width="22" height="12" aria-hidden="true"><line x1="0" x2="22" y1="6" y2="6" stroke="${EVO_META_COLOR}" stroke-width="2"/><circle cx="11" cy="6" r="3.5" fill="${EVO_META_COLOR}"/></svg>Meta</span>
+  </div>`;
+}
+
+function evoCardHTML(serv, jefe, last){
+  const serie = evoSerie(serv.key, jefe);
+  const tieneAlgo = serie.venta.some(x => x > 0) || serie.meta.some(x => x > 0);
+  const ac = evoAcum(serie, last);
+  const head = `<div class="evo-card-head">
+      <div class="evo-card-title">${serv.label}<span class="evo-card-unit">${serv.unidad}</span></div>
+      ${tieneAlgo ? evoLegendHTML() : ''}
+    </div>`;
+  if(!tieneAlgo){
+    return `<div class="evo-card">${head}<div class="evo-empty">Sin ventas ni meta de ${serv.label} en ${EVO_VENTAS.year}.</div></div>`;
+  }
+  const acum = `<div class="evo-acum">Acumulado ${evoRango(last)}: <b>${evoFmt(ac.venta)}</b>${ac.meta > 0 ? ' de ' + evoFmt(ac.meta) + ' · <span class="pill ' + pillClass(ac.pct) + '">' + ac.pct + '%</span>' : ''}</div>`;
+  return `<div class="evo-card">${head}${acum}<div class="evo-chart" data-serv="${serv.key}" data-jefe="${jefe === null ? '' : jefe}"></div></div>`;
+}
+
+function evoTablaHTML(last){
+  const serv = EVO_SERVICIOS.find(s => s.key === evoTablaServ) || EVO_SERVICIOS[0];
+  const chips = EVO_SERVICIOS.map(s => `<button class="${s.key === serv.key ? 'active' : ''}" onclick="evoSetTablaServ('${s.key}')">${s.label}</button>`).join('');
+  const cell = (v, mt) => {
+    const p = evoPct(v, mt);
+    if(p === null) return `<td class="evo-nometa"><div class="evo-v">${evoFmt(v)}</div><div class="evo-m">sin meta</div>—</td>`;
+    return `<td><div class="evo-v">${evoFmt(v)}</div><div class="evo-m">de ${evoFmt(mt)}</div><span class="pill ${pillClass(p)}">${p}%</span></td>`;
+  };
+  const fila = (nombre, serie, cls) => {
+    let tds = '';
+    for(let m=0;m<=last;m++) tds += cell(serie.venta[m], serie.meta[m]);
+    const ac = evoAcum(serie, last);
+    return `<tr class="${cls||''}"><td>${nombre}</td>${tds}${cell(ac.venta, ac.meta)}</tr>`;
+  };
+  let body = '';
+  const sumaJefes = new Array(12).fill(0);
+  METAS_JEFES.forEach((nombre, j)=>{
+    const s = evoSerie(serv.key, j);
+    for(let m=0;m<12;m++) sumaJefes[m] += s.meta[m];
+    if(!s.venta.some(x => x > 0) && !s.meta.some(x => x > 0)) return;
+    body += fila(nombre, s);
+  });
+  const ger = evoSerie(serv.key, null);
+  body += fila('Gerencia', ger, 'total-row');
+  let ths = '';
+  for(let m=0;m<=last;m++) ths += `<th>${EVO_MESES_ABR[m]}</th>`;
+
+  const notas = [];
+  const difs = [];
+  for(let m=0;m<=last;m++){ if(EVO_METAS.gerencia && Math.round(ger.meta[m]) !== Math.round(sumaJefes[m])) difs.push(EVO_MESES_ABR[m]); }
+  if(difs.length) notas.push('La meta de Gerencia es la del bloque "Regiones" del archivo de metas; en ' + difs.join(', ') + ' no coincide con la suma de las metas de los Jefes Comerciales.');
+  EVO_METAS.jefes.forEach(b=>{
+    if(!b.de) return;
+    const meses = [];
+    for(let m=0;m<=last;m++){ if(b[serv.key][m] > 0) meses.push(m); }
+    if(!meses.length) return;
+    const rango = meses.length > 1 ? EVO_MESES_ABR[meses[0]] + '–' + EVO_MESES_ABR[meses[meses.length-1]] : EVO_MESES_ABR[meses[0]];
+    notas.push('La meta de ' + METAS_JEFES[b.j] + ' incluye la de ' + escapeHtmlAttr(b.de) + ' (' + rango + '), cuyas cifras pasaron a su cargo.');
+  });
+  const sinJefe = evoAcum(evoSerie(serv.key, JEFE_ORDER_KEYS.length), last).venta;
+  if(sinJefe > 0) notas.push('La fila Gerencia incluye ' + evoFmt(sinJefe) + ' de venta sin Jefe Comercial reconocido.');
+
+  return `
+    <div class="section-label">Detalle mensual por Jefe Comercial — ${serv.label} (${serv.unidad})</div>
+    <div class="evo-chips">${chips}</div>
+    <div class="general-table-wrap">
+      <table class="general evo-table">
+        <thead><tr class="sub-row"><th class="name-col">Jefe Comercial</th>${ths}<th>Acumulado ${evoRango(last)}</th></tr></thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>
+    <p class="evo-note">En cada celda: venta del mes, meta y % de cumplimiento. Cada Jefe Comercial suma sus canales FVI y FQ.${notas.length ? ' ' + notas.join(' ') : ''}</p>`;
+}
+
+function evolutivoHTML(){
+  const last = evoUltimoMes();
+  if(last < 0){
+    return `<div class="section-label">Evolutivo</div>
+      <div class="donut-card" style="max-width:560px;"><p style="font-size:0.9rem; color:var(--muted); margin:0;">Todavía no hay datos del evolutivo. Súbelos en la pestaña "Cargar datos" (archivo Evolutivo y archivo Metas anuales).</p></div>`;
+  }
+  const year = EVO_VENTAS.year || '';
+  const kpis = EVO_SERVICIOS.map(s=>{
+    const ac = evoAcum(evoSerie(s.key, null), last);
+    return ac.pct === null
+      ? { value: evoFmt(ac.venta), label: s.label + ' acumulado ' + evoRango(last), sub: 'sin meta cargada' }
+      : { value: ac.pct + '%', label: s.label + ' acumulado ' + evoRango(last), sub: evoFmt(ac.venta) + ' de ' + evoFmt(ac.meta) + ' ' + s.unidad, tone: pillClass(ac.pct) };
+  });
+  const fmtFecha = iso => new Date(iso).toLocaleString('es-CL',{timeZone:'America/Santiago',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
+  const cargas = [];
+  if(EVO_VENTAS.updatedAt) cargas.push('Ventas cargadas el ' + fmtFecha(EVO_VENTAS.updatedAt));
+  if(EVO_METAS.updatedAt) cargas.push('Metas cargadas el ' + fmtFecha(EVO_METAS.updatedAt));
+  const chipsJefe = METAS_JEFES.map((n,j)=>`<button class="${j === evoJefeSel ? 'active' : ''}" onclick="evoSetJefe(${j})">${n}</button>`).join('');
+
+  return `
+    ${kpiRowHTML(kpis)}
+    <div class="section-label">Evolutivo ${year} — Venta por mes · Gerencia</div>
+    <div class="evo-grid">${EVO_SERVICIOS.map(s => evoCardHTML(s, null, last)).join('')}</div>
+
+    <div class="section-label">Evolutivo ${year} — Venta por mes · Jefe Comercial</div>
+    <div class="evo-chips">${chipsJefe}</div>
+    <div class="evo-grid">${EVO_SERVICIOS.map(s => evoCardHTML(s, evoJefeSel, last)).join('')}</div>
+
+    ${evoTablaHTML(last)}
+    ${cargas.length ? '<p class="evo-note">' + cargas.join(' · ') + '.</p>' : ''}
+  `;
+}
+
+function renderEvolutivoCharts(){
+  const last = evoUltimoMes();
+  if(last < 0) return;
+  const n = last + 1;
+  document.querySelectorAll('.evo-grid').forEach(grid=>{
+    const items = Array.from(grid.querySelectorAll('.evo-chart')).map(el=>{
+      const serv = EVO_SERVICIOS.find(s => s.key === el.dataset.serv);
+      const jefe = el.dataset.jefe === '' ? null : Number(el.dataset.jefe);
+      return { el, serie: evoSerie(serv.key, jefe), titulo: serv.label + (jefe === null ? ' · Gerencia' : ' · ' + METAS_JEFES[jefe]) };
+    });
+    // si con tres gráficos por fila los números no caben (muchos meses), se muestra uno por fila
+    grid.classList.remove('evo-wide');
+    const apretado = items.some(o => evoRawFs(o.serie, n, (o.el.clientWidth - EVO_GUT - EVO_PAD_R) / n) < 9);
+    if(apretado) grid.classList.add('evo-wide');
+    items.forEach(o=>{
+      o.el.innerHTML = '';
+    });
+    items.forEach(o=>{
+      const W = Math.max(260, Math.floor(o.el.clientWidth));
+      o.el.innerHTML = evoChartSVG(o.serie, last, W, o.titulo);
+    });
+  });
+}
+function evoSetJefe(j){
+  evoJefeSel = j;
+  const y = window.scrollY;
+  renderContent();
+  window.scrollTo(0, y);
+}
+function evoSetTablaServ(k){
+  evoTablaServ = k;
+  const y = window.scrollY;
+  renderContent();
+  window.scrollTo(0, y);
+}
+let evoResizeTimer = null;
+window.addEventListener('resize', ()=>{
+  if(activeTab !== 'evolutivo') return;
+  clearTimeout(evoResizeTimer);
+  evoResizeTimer = setTimeout(renderEvolutivoCharts, 150);
+});
+
 function renderCargarDatos(){
   document.getElementById('main-content').innerHTML = metasFormHTML() + `
     <div class="section-label">Cargar datos del día (Móvil)</div>
@@ -3351,6 +4096,29 @@ function renderCargarDatos(){
       <button onclick="handleUploadSSPP()" style="width:100%; padding:10px 12px; background:var(--amber); color:#1A1200; border:none; border-radius:3px; font-weight:600; cursor:pointer;">Subir y actualizar</button>
       <div id="upload-status-sspp" style="margin-top:12px; font-size:0.85rem; color:var(--muted);"></div>
     </div>
+
+    ${evoVisible() ? `    <div class="section-label" style="margin-top:32px;">Cargar Evolutivo (ventas por mes)</div>
+    <div class="donut-card" style="max-width:480px; margin-bottom:32px;">
+      <p style="font-size:0.88rem; color:var(--muted); margin:0 0 16px;">
+        Selecciona el archivo Evolutivo (hojas Movil, Fijo y SSPP). Alimenta la pestaña Evolutivo con las ventas de cada mes por Jefe Comercial. Como el archivo es grande, puede tardar unos segundos.
+      </p>
+      <input type="file" id="upload-file-evo" accept=".xlsx,.xls" style="margin-bottom:14px; width:100%; color:var(--text);">
+      <input type="password" id="upload-password-evo" placeholder="Clave de carga" style="width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--line); border-radius:3px; color:var(--text); margin-bottom:14px;">
+      <button onclick="handleUploadEvolutivo()" style="width:100%; padding:10px 12px; background:var(--amber); color:#1A1200; border:none; border-radius:3px; font-weight:600; cursor:pointer;">Subir y actualizar</button>
+      <div id="upload-status-evo" style="margin-top:12px; font-size:0.85rem; color:var(--muted);"></div>
+    </div>
+
+    <div class="section-label">Cargar Metas anuales (Evolutivo)</div>
+    <div class="donut-card" style="max-width:480px;">
+      <p style="font-size:0.88rem; color:var(--muted); margin:0 0 16px;">
+        Selecciona el archivo Metas_Anual.xlsx (bloque "Regiones" para la Gerencia y un bloque por Jefe Comercial, con las metas de SSPP, Voz Móvil y FO por mes). Solo se usa en la pestaña Evolutivo; las metas del mes actual se siguen editando arriba.
+      </p>
+      <input type="file" id="upload-file-evometas" accept=".xlsx,.xls" style="margin-bottom:14px; width:100%; color:var(--text);">
+      <input type="password" id="upload-password-evometas" placeholder="Clave de carga" style="width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--line); border-radius:3px; color:var(--text); margin-bottom:14px;">
+      <button onclick="handleUploadMetasAnual()" style="width:100%; padding:10px 12px; background:var(--amber); color:#1A1200; border:none; border-radius:3px; font-weight:600; cursor:pointer;">Subir y actualizar</button>
+      <div id="upload-status-evometas" style="margin-top:12px; font-size:0.85rem; color:var(--muted);"></div>
+    </div>
+    ` : ''}
   `;
 }
 
@@ -3366,6 +4134,7 @@ function initDashboard(){
   loadRemoteDataFOImages2();
   loadRemoteDataSSPP();
   loadRemoteDataFunnel();
+  loadRemoteEvolutivo();
 }
 </script>
 
