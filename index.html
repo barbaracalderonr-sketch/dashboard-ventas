@@ -3441,7 +3441,7 @@ function ssppEquipoHTML(){
 const EVO_MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const EVO_MESES_ABR = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const EVO_SERVICIOS = [
-  { key:'movil', label:'Móvil', unidad:'líneas (Q L)' },
+  { key:'movil', label:'Móvil', unidad:'líneas Voz (Q L)' },
   { key:'fo',    label:'FO',    unidad:'órdenes terminadas' },
   { key:'sspp',  label:'SSPP',  unidad:'NAV' }
 ];
@@ -3471,14 +3471,14 @@ let EVO_VENTAS = {"year": 2026, "updatedAt": null, "rows": [
   {"s": "fo", "j": 4, "c": "FQ", "m": [371, 327, 428, 364, 333, 332, 268, 333, 344, 0, 0, 0]}, 
   {"s": "fo", "j": 5, "c": "", "m": [8, 5, 6, 7, 2, 0, 6, 0, 0, 0, 0, 0]}, 
   {"s": "fo", "j": 5, "c": "FVI", "m": [0, 0, 0, 0, 0, 0, 0, 6, 3, 0, 0, 0]}, 
-  {"s": "movil", "j": 0, "c": "FVI", "m": [58, 47, 62, 13, 39, 32, 71, 79, 54, 0, 0, 0]}, 
+  {"s": "movil", "j": 0, "c": "FVI", "m": [58, 46, 62, 12, 39, 32, 71, 79, 54, 0, 0, 0]}, 
   {"s": "movil", "j": 1, "c": "FVI", "m": [104, 80, 258, 49, 99, 91, 71, 114, 62, 0, 0, 0]}, 
   {"s": "movil", "j": 2, "c": "FQ", "m": [168, 154, 151, 148, 90, 178, 224, 305, 219, 0, 0, 0]}, 
-  {"s": "movil", "j": 2, "c": "FVI", "m": [56, 114, 42, 107, 49, 31, 34, 35, 36, 0, 0, 0]}, 
+  {"s": "movil", "j": 2, "c": "FVI", "m": [56, 114, 42, 103, 48, 26, 34, 32, 36, 0, 0, 0]}, 
   {"s": "movil", "j": 3, "c": "FVI", "m": [77, 82, 38, 98, 56, 59, 100, 70, 59, 0, 0, 0]}, 
-  {"s": "movil", "j": 4, "c": "FQ", "m": [0, 0, 0, 337, 211, 223, 158, 306, 649, 0, 0, 0]}, 
+  {"s": "movil", "j": 4, "c": "FQ", "m": [0, 0, 0, 337, 211, 223, 157, 305, 649, 0, 0, 0]}, 
   {"s": "movil", "j": 5, "c": "FQ", "m": [316, 222, 281, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, 
-  {"s": "movil", "j": 5, "c": "FVI", "m": [188, 106, 132, 44, 68, 91, 161, 76, 151, 0, 0, 0]}, 
+  {"s": "movil", "j": 5, "c": "FVI", "m": [188, 106, 131, 44, 68, 91, 161, 76, 151, 0, 0, 0]}, 
   {"s": "sspp", "j": 0, "c": "ATENTO", "m": [0, 0, 0, 0, 762, 193, 1476, 965.84, 1496, 0, 0, 0]}, 
   {"s": "sspp", "j": 0, "c": "FVI", "m": [598, 283, 477, 504, 0, 0, 0, 0, 0, 0, 0, 0]}, 
   {"s": "sspp", "j": 1, "c": "ATENTO", "m": [0, 0, 0, 0, 972, 835, 1798, 1261.44, 671, 0, 0, 0]}, 
@@ -3545,7 +3545,7 @@ function evoJefeIdx(name){
 
 function computeEvolutivoFromWorkbook(wb){
   const defs = {
-    movil: { jefe:['jefe comercial'], valor:['q l'], cuentaFilas:false },
+    movil: { jefe:['jefe comercial'], valor:['q l'], cuentaFilas:false, soloActividad:'voz' },  // en Móvil solo cuenta ACTIVIDAD = Voz (se excluye BAM)
     fo:    { jefe:['jc','jefe comercial'], valor:['cuenta'], cuentaFilas:true },
     sspp:  { jefe:['jefe comercial'], valor:['nav gestion'], cuentaFilas:false }
   };
@@ -3571,6 +3571,8 @@ function computeEvolutivoFromWorkbook(wb){
     const hdr = data[0].map(h => h === null ? '' : h);
     const d = defs[serv.key];
     const cJefe = evoFindCol(hdr, d.jefe);
+    const cAct = d.soloActividad ? evoFindCol(hdr, ['actividad']) : -1;
+    let fuera = 0;
     const cMes = evoFindCol(hdr, ['mes cierre']);
     const cCanal = evoFindCol(hdr, ['canal']);
     const cVal = evoFindCol(hdr, d.valor);
@@ -3582,6 +3584,7 @@ function computeEvolutivoFromWorkbook(wb){
     for(let r=1;r<data.length;r++){
       const row = data[r];
       if(!row) continue;
+      if(cAct >= 0 && evoNorm(row[cAct]) !== d.soloActividad){ if(row.some(x => x !== null && x !== '')) fuera++; continue; }
       const mes = evoMesIndex(row[cMes]);
       if(mes < 0){ if(row.some(x => x !== null && x !== '')) sinMes++; continue; }
       let v;
@@ -3595,6 +3598,8 @@ function computeEvolutivoFromWorkbook(wb){
       if(isFinite(year)) yearCount[year] = (yearCount[year] || 0) + 1;
       filas.push({ s: serv.key, j: evoJefeIdx(row[cJefe]), c: (cCanal < 0 || row[cCanal] === null || row[cCanal] === undefined) ? '' : String(row[cCanal]).trim().toUpperCase(), mes, year: isFinite(year) ? year : null, v });
     }
+    if(d.soloActividad && cAct < 0) avisos.push('la hoja de ' + serv.label + ' no trae la columna ACTIVIDAD, así que no se pudo filtrar solo Voz');
+    if(fuera) avisos.push(fuera + ' fila(s) de ' + serv.label + ' con actividad distinta de Voz no se contaron');
     if(sinMes) avisos.push(sinMes + ' fila(s) de ' + serv.label + ' sin MES CIERRE válido no se contaron');
   });
 
