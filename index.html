@@ -626,6 +626,25 @@
     margin:10px 0 0;
     line-height:1.5;
   }
+  .evo-gap{ height:36px; }
+  .evo-sub-label{
+    font-family: var(--font-display);
+    font-weight:700;
+    font-size:0.92rem;
+    color: var(--text);
+    margin:20px 0 10px;
+  }
+  .evo-sub-label span{ font-family: var(--font-body); font-weight:400; font-size:0.78rem; color: var(--muted); margin-left:8px; }
+  table.evo-sup-table{ font-variant-numeric: tabular-nums; }
+  table.evo-sup-table th, table.evo-sup-table td{ padding:7px 12px; text-align:right; }
+  table.evo-sup-table td:first-child, table.evo-sup-table th.name-col{ text-align:left; }
+  table.evo-sup-table tbody tr.evo-jefe-row td{ background:#F6F8FB; font-weight:700; color: var(--text); }
+  table.evo-sup-table tbody tr.evo-sup-row td{ font-weight:400; }
+  table.evo-sup-table tbody tr.evo-sup-row td:first-child{ padding-left:30px; font-weight:400; }
+  table.evo-sup-table td.evo-zero{ color:#B4BFCC; }
+  table.evo-sup-table th.evo-acum-col, table.evo-sup-table td.evo-acum-col{ border-left:2px solid var(--line); font-weight:700; }
+  table.evo-sup-table tbody tr.evo-sup-row td.evo-acum-col{ font-weight:600; }
+  table.evo-sup-table td .evo-unit{ font-weight:400; font-size:0.74rem; color: var(--muted); margin-left:6px; }
   #evo-tip{
     position:fixed;
     z-index:50;
@@ -3459,36 +3478,102 @@ const EVO_META_COLOR = '#16283D';
 
 // Valores iniciales (archivos Evolutivo y Metas_Anual entregados); se reemplazan con lo que se suba en "Cargar datos".
 let EVO_VENTAS = {"year": 2026, "updatedAt": null, "rows": [
-  {"s": "fo", "j": 0, "c": "", "m": [3, 9, 2, 1, 5, 3, 7, 0, 0, 0, 0, 0]}, 
-  {"s": "fo", "j": 0, "c": "FVI", "m": [0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0]}, 
-  {"s": "fo", "j": 1, "c": "", "m": [5, 8, 10, 6, 5, 1, 3, 0, 0, 0, 0, 0]}, 
-  {"s": "fo", "j": 1, "c": "FVI", "m": [0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0]}, 
-  {"s": "fo", "j": 2, "c": "", "m": [3, 9, 0, 2, 3, 0, 0, 0, 0, 0, 0, 0]}, 
-  {"s": "fo", "j": 2, "c": "FQ", "m": [118, 120, 151, 130, 124, 98, 85, 77, 95, 0, 0, 0]}, 
-  {"s": "fo", "j": 2, "c": "FVI", "m": [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]}, 
-  {"s": "fo", "j": 3, "c": "", "m": [1, 7, 4, 3, 2, 0, 2, 0, 0, 0, 0, 0]}, 
-  {"s": "fo", "j": 3, "c": "FVI", "m": [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]}, 
-  {"s": "fo", "j": 4, "c": "FQ", "m": [371, 327, 428, 364, 333, 332, 268, 333, 344, 0, 0, 0]}, 
-  {"s": "fo", "j": 5, "c": "", "m": [8, 5, 6, 7, 2, 0, 6, 0, 0, 0, 0, 0]}, 
-  {"s": "fo", "j": 5, "c": "FVI", "m": [0, 0, 0, 0, 0, 0, 0, 6, 3, 0, 0, 0]}, 
-  {"s": "movil", "j": 0, "c": "FVI", "m": [58, 46, 62, 12, 39, 32, 71, 79, 54, 0, 0, 0]}, 
-  {"s": "movil", "j": 1, "c": "FVI", "m": [104, 80, 258, 49, 99, 91, 71, 114, 62, 0, 0, 0]}, 
-  {"s": "movil", "j": 2, "c": "FQ", "m": [168, 154, 151, 148, 90, 178, 224, 305, 219, 0, 0, 0]}, 
-  {"s": "movil", "j": 2, "c": "FVI", "m": [56, 114, 42, 103, 48, 26, 34, 32, 36, 0, 0, 0]}, 
-  {"s": "movil", "j": 3, "c": "FVI", "m": [77, 82, 38, 98, 56, 59, 100, 70, 59, 0, 0, 0]}, 
-  {"s": "movil", "j": 4, "c": "FQ", "m": [0, 0, 0, 337, 211, 223, 157, 305, 649, 0, 0, 0]}, 
-  {"s": "movil", "j": 5, "c": "FQ", "m": [316, 222, 281, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, 
-  {"s": "movil", "j": 5, "c": "FVI", "m": [188, 106, 131, 44, 68, 91, 161, 76, 151, 0, 0, 0]}, 
-  {"s": "sspp", "j": 0, "c": "ATENTO", "m": [0, 0, 0, 0, 762, 193, 1476, 965.84, 1496, 0, 0, 0]}, 
-  {"s": "sspp", "j": 0, "c": "FVI", "m": [598, 283, 477, 504, 0, 0, 0, 0, 0, 0, 0, 0]}, 
-  {"s": "sspp", "j": 1, "c": "ATENTO", "m": [0, 0, 0, 0, 972, 835, 1798, 1261.44, 671, 0, 0, 0]}, 
-  {"s": "sspp", "j": 1, "c": "FVI", "m": [2128, 927, 1367, 1528, 0, 0, 0, 0, 0, 0, 0, 0]}, 
-  {"s": "sspp", "j": 2, "c": "ATENTO", "m": [0, 0, 0, 0, 1046, 1046, 218, 762.16, 57, 0, 0, 0]}, 
-  {"s": "sspp", "j": 2, "c": "FVI", "m": [1726, 1053, 539, 1632, 0, 0, 0, 0, 0, 0, 0, 0]}, 
-  {"s": "sspp", "j": 3, "c": "ATENTO", "m": [0, 0, 0, 0, 116, 1321, 2129, 1806.3, 1585, 0, 0, 0]}, 
-  {"s": "sspp", "j": 3, "c": "FVI", "m": [1331, 1163, 1319, 683, 0, 0, 0, 0, 0, 0, 0, 0]}, 
-  {"s": "sspp", "j": 5, "c": "ATENTO", "m": [0, 0, 0, 0, 1116, 628, 645, 999.44, 1566, 0, 0, 0]}, 
-  {"s": "sspp", "j": 5, "c": "FVI", "m": [975, 430, 735, 348, 0, 0, 0, 0, 0, 0, 0, 0]}
+  {"s": "fo", "j": 0, "c": "FVI", "u": "Lady Campos Mella", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0]},
+  {"s": "fo", "j": 0, "c": "", "u": "Lady Campos Mella", "p": "Atento", "m": [2, 4, 2, 1, 5, 3, 7, 0, 0, 0, 0, 0]},
+  {"s": "fo", "j": 0, "c": "", "u": "Nicole Olivares Vergara", "p": "Atento", "m": [1, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "fo", "j": 1, "c": "FVI", "u": "Ana Morales Deyan", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0]},
+  {"s": "fo", "j": 1, "c": "", "u": "Ana Morales Deyan", "p": "Atento", "m": [5, 8, 10, 6, 5, 1, 3, 0, 0, 0, 0, 0]},
+  {"s": "fo", "j": 2, "c": "FQ", "u": "Alfonso Reinoso Sepulveda", "p": "Global", "m": [33, 34, 47, 49, 46, 32, 20, 23, 28, 0, 0, 0]},
+  {"s": "fo", "j": 2, "c": "FQ", "u": "Amparo Astorga Lineros", "p": "Global", "m": [58, 56, 72, 53, 47, 42, 38, 44, 49, 0, 0, 0]},
+  {"s": "fo", "j": 2, "c": "FQ", "u": "Felipe Fuentealba Carrasco", "p": "Global", "m": [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]},
+  {"s": "fo", "j": 2, "c": "FQ", "u": "Javier Cofré Mena", "p": "Global", "m": [27, 30, 32, 28, 31, 24, 27, 10, 17, 0, 0, 0]},
+  {"s": "fo", "j": 2, "c": "FVI", "u": "Paula Carolina Farias ALvarez", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]},
+  {"s": "fo", "j": 2, "c": "", "u": "Paula Carolina Farias ALvarez", "p": "Atento", "m": [3, 9, 0, 2, 3, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "fo", "j": 3, "c": "FVI", "u": "Pamela Lizama Trujillo", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]},
+  {"s": "fo", "j": 3, "c": "", "u": "Hugo Herrera Delgado", "p": "Atento", "m": [1, 6, 3, 2, 1, 0, 1, 0, 0, 0, 0, 0]},
+  {"s": "fo", "j": 3, "c": "", "u": "Pamela Lizama Trujillo", "p": "Atento", "m": [0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Claudio Burgos Ojeda", "p": "Wesell", "m": [72, 57, 94, 91, 69, 61, 58, 78, 67, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Felipe Espinoza Bobadilla", "p": "Wesell", "m": [32, 48, 50, 55, 47, 34, 27, 28, 48, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Francisca Leyton Aliaga", "p": "Wesell", "m": [53, 43, 45, 34, 42, 36, 37, 62, 25, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Guiannina Vega Alfaro", "p": "Wesell", "m": [9, 8, 11, 8, 8, 12, 13, 15, 9, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Jessica Carmen Riquelme Toloza", "p": "Wesell", "m": [0, 0, 0, 0, 0, 0, 0, 0, 40, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Jorge Muñoz Sandoval", "p": "Wesell", "m": [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Juan Pablo Munoz Guzman", "p": "Wesell", "m": [0, 0, 0, 0, 0, 0, 0, 0, 31, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Marisol Vera Cancino", "p": "Wesell", "m": [71, 60, 71, 65, 66, 69, 66, 72, 59, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Paola Morales Ferrer", "p": "Wesell", "m": [37, 38, 58, 26, 27, 30, 16, 21, 0, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Pedro Ponce Reyes", "p": "Wesell", "m": [86, 66, 94, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Sup RM", "p": "Wesell", "m": [0, 0, 0, 0, 0, 0, 0, 0, 29, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Tamara Moreno Valderrama", "p": "Wesell", "m": [11, 5, 5, 7, 7, 17, 13, 13, 7, 0, 0, 0]},
+  {"s": "fo", "j": 4, "c": "FQ", "u": "Veronica Orellana Leiva", "p": "Wesell", "m": [0, 0, 0, 78, 67, 73, 38, 44, 29, 0, 0, 0]},
+  {"s": "fo", "j": 5, "c": "FVI", "u": "Ignacio Meriño Fernández", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 4, 2, 0, 0, 0]},
+  {"s": "fo", "j": 5, "c": "FVI", "u": "Vanessa Alvarez Cifuentes", "p": "Atento", "m": [0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0]},
+  {"s": "fo", "j": 5, "c": "", "u": "Ignacio Meriño Fernández", "p": "Atento", "m": [4, 4, 2, 5, 0, 0, 5, 0, 0, 0, 0, 0]},
+  {"s": "fo", "j": 5, "c": "", "u": "Vanessa Alvarez Cifuentes", "p": "Atento", "m": [4, 1, 4, 2, 2, 0, 1, 0, 0, 0, 0, 0]},
+  {"s": "movil", "j": 0, "c": "FVI", "u": "Lady Campos Mella", "p": "Atento", "m": [55, 28, 62, 12, 39, 32, 71, 79, 54, 0, 0, 0]},
+  {"s": "movil", "j": 0, "c": "FVI", "u": "Nicole Olivares Vergara", "p": "Atento", "m": [3, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "movil", "j": 1, "c": "FVI", "u": "Ana María Morales Deyan", "p": "Atento", "m": [30, 26, 48, 4, 42, 91, 71, 114, 62, 0, 0, 0]},
+  {"s": "movil", "j": 1, "c": "FVI", "u": "Anita Orrego Muñoz", "p": "Atento", "m": [24, 4, 150, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "movil", "j": 1, "c": "FVI", "u": "Sup. Cartera La Serena", "p": "Atento", "m": [50, 50, 60, 45, 57, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "movil", "j": 2, "c": "FQ", "u": "Alfonso Reinoso Sepúlveda", "p": "Global", "m": [17, 45, 68, 52, 27, 67, 68, 84, 103, 0, 0, 0]},
+  {"s": "movil", "j": 2, "c": "FQ", "u": "Amparo Astorga", "p": "Global", "m": [123, 76, 82, 71, 40, 73, 116, 152, 78, 0, 0, 0]},
+  {"s": "movil", "j": 2, "c": "FQ", "u": "Javier Cofré", "p": "Global", "m": [28, 33, 1, 25, 23, 38, 40, 69, 38, 0, 0, 0]},
+  {"s": "movil", "j": 2, "c": "FVI", "u": "Paula Carolina Farias Alvarez", "p": "Atento", "m": [47, 103, 41, 103, 48, 26, 34, 32, 36, 0, 0, 0]},
+  {"s": "movil", "j": 2, "c": "FVI", "u": "Sup.Especialista Viña del Mar", "p": "Atento", "m": [9, 11, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "movil", "j": 3, "c": "FVI", "u": "Erick Soto Reyes", "p": "Atento", "m": [0, 33, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "movil", "j": 3, "c": "FVI", "u": "Javiera Vilugron Artigas", "p": "Atento", "m": [24, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "movil", "j": 3, "c": "FVI", "u": "Pamela Lizama Trujillo", "p": "Atento", "m": [7, 20, 24, 59, 45, 51, 60, 48, 41, 0, 0, 0]},
+  {"s": "movil", "j": 3, "c": "FVI", "u": "Sup. NN Concepción", "p": "Atento", "m": [46, 29, 14, 39, 11, 8, 40, 22, 18, 0, 0, 0]},
+  {"s": "movil", "j": 4, "c": "FQ", "u": "Claudio Burgos Ojeda", "p": "Wesell", "m": [0, 0, 0, 15, 8, 4, 5, 15, 30, 0, 0, 0]},
+  {"s": "movil", "j": 4, "c": "FQ", "u": "Felipe Espinoza Bobadilla", "p": "Wesell", "m": [0, 0, 0, 18, 13, 24, 35, 33, 13, 0, 0, 0]},
+  {"s": "movil", "j": 4, "c": "FQ", "u": "Francisca Leyton Aliaga", "p": "Wesell", "m": [0, 0, 0, 13, 12, 2, 0, 0, 0, 0, 0, 0]},
+  {"s": "movil", "j": 4, "c": "FQ", "u": "Guiannina Vega Alfaro", "p": "Wesell", "m": [0, 0, 0, 135, 92, 117, 25, 100, 144, 0, 0, 0]},
+  {"s": "movil", "j": 4, "c": "FQ", "u": "Jessica Carmen Riquelme Toloza", "p": "Wesell", "m": [0, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0]},
+  {"s": "movil", "j": 4, "c": "FQ", "u": "Juan Pablo Munoz Guzman", "p": "Wesell", "m": [0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0]},
+  {"s": "movil", "j": 4, "c": "FQ", "u": "Marisol Vera Cancino", "p": "Wesell", "m": [0, 0, 0, 4, 1, 0, 6, 9, 16, 0, 0, 0]},
+  {"s": "movil", "j": 4, "c": "FQ", "u": "Paola Morales", "p": "Wesell", "m": [0, 0, 0, 2, 5, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "movil", "j": 4, "c": "FQ", "u": "Tamara Moreno Valderrama", "p": "Wesell", "m": [0, 0, 0, 140, 80, 76, 86, 146, 417, 0, 0, 0]},
+  {"s": "movil", "j": 4, "c": "FQ", "u": "Veronica Orellana Leiva", "p": "Wesell", "m": [0, 0, 0, 10, 0, 0, 0, 2, 10, 0, 0, 0]},
+  {"s": "movil", "j": 5, "c": "FQ", "u": "Claudio Burgos Ojeda", "p": "Wesell", "m": [27, 29, 24, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "movil", "j": 5, "c": "FQ", "u": "Diego Cardozo Cabrera", "p": "Wesell", "m": [6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "movil", "j": 5, "c": "FQ", "u": "Felipe Espinoza Bobadilla", "p": "Wesell", "m": [15, 4, 33, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "movil", "j": 5, "c": "FQ", "u": "Francisca Leyton Aliaga", "p": "Wesell", "m": [14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "movil", "j": 5, "c": "FQ", "u": "Guiannina Vega Alfaro", "p": "Wesell", "m": [108, 51, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "movil", "j": 5, "c": "FQ", "u": "Jorge Muñoz Sandoval", "p": "Wesell", "m": [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "movil", "j": 5, "c": "FQ", "u": "Marisol Vera Cancino", "p": "Wesell", "m": [5, 3, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "movil", "j": 5, "c": "FQ", "u": "Paola Morales", "p": "Wesell", "m": [1, 17, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "movil", "j": 5, "c": "FQ", "u": "Pedro Ponce Reyes", "p": "Wesell", "m": [24, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "movil", "j": 5, "c": "FQ", "u": "Tamara Moreno Valderrama", "p": "Wesell", "m": [116, 114, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "movil", "j": 5, "c": "FVI", "u": "Ignacio Adonnys Meriño Fernández", "p": "Atento", "m": [115, 80, 109, 27, 67, 73, 119, 69, 139, 0, 0, 0]},
+  {"s": "movil", "j": 5, "c": "FVI", "u": "Vanessa Alvarez Cifuentes", "p": "Atento", "m": [73, 26, 22, 17, 1, 18, 42, 7, 12, 0, 0, 0]},
+  {"s": "sspp", "j": 0, "c": "ATENTO", "u": "Sup. NN RG Antofagasta", "p": "", "m": [0, 0, 0, 0, 0, 0, 0, 395.94, 646, 0, 0, 0]},
+  {"s": "sspp", "j": 0, "c": "ATENTO", "u": "Sup. NN RM Antogasta", "p": "", "m": [0, 0, 0, 0, 0, 0, 1040, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 0, "c": "FVI", "u": "Lady Campos Mella", "p": "", "m": [598, 283, 477, 504, 762, 193, 436, 569.9, 850, 0, 0, 0]},
+  {"s": "sspp", "j": 1, "c": "ATENTO", "u": "Ana Morales Deyan", "p": "", "m": [0, 0, 0, 0, 972, 835, 406, 1179.92, 497, 0, 0, 0]},
+  {"s": "sspp", "j": 1, "c": "ATENTO", "u": "Sup. NN La Serena", "p": "", "m": [0, 0, 0, 0, 0, 0, 1392, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 1, "c": "ATENTO", "u": "Sup. NN RG La Serena", "p": "", "m": [0, 0, 0, 0, 0, 0, 0, 81.52, 174, 0, 0, 0]},
+  {"s": "sspp", "j": 1, "c": "FVI", "u": "Ana Morales Deyan", "p": "", "m": [2128, 927, 1367, 1528, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 2, "c": "ATENTO", "u": "Paula Carolina Farias ALvarez", "p": "", "m": [0, 0, 0, 0, 0, 0, 0, 762.16, 57, 0, 0, 0]},
+  {"s": "sspp", "j": 2, "c": "ATENTO", "u": "Solange Palacios Ortiz", "p": "", "m": [0, 0, 0, 0, 809, 726, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 2, "c": "ATENTO", "u": "Solange Paola Palacios Ortiz", "p": "", "m": [0, 0, 0, 0, 0, 0, 218, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 2, "c": "ATENTO", "u": "Sup. Cartera Valparaiso", "p": "", "m": [0, 0, 0, 0, 237, 320, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 2, "c": "FVI", "u": "Solange Palacios Ortiz", "p": "", "m": [521, 761, 107, 657, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 2, "c": "FVI", "u": "Sup. Cartera Valparaiso", "p": "", "m": [0, 0, 432, 975, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 2, "c": "FVI", "u": "Sup. Especialista Viña del Mar", "p": "", "m": [1205, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 2, "c": "FVI", "u": "Sup. Hunting Viña del Mar", "p": "", "m": [0, 292, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 3, "c": "ATENTO", "u": "Hugo Reinaldo Herrera Delgado", "p": "", "m": [0, 0, 0, 0, 0, 409, 570, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 3, "c": "ATENTO", "u": "Sup. NN Concepción", "p": "", "m": [0, 0, 0, 0, 0, 0, 0, 0, 99, 0, 0, 0]},
+  {"s": "sspp", "j": 3, "c": "ATENTO", "u": "Sup. NN La Talca", "p": "", "m": [0, 0, 0, 0, 0, 0, 1055, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 3, "c": "ATENTO", "u": "Sup. NN RG Concepción", "p": "", "m": [0, 0, 0, 0, 0, 0, 0, 1173.95, 646, 0, 0, 0]},
+  {"s": "sspp", "j": 3, "c": "FVI", "u": "Erick Soto Reyes", "p": "", "m": [0, 1038, 1105, 283, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 3, "c": "FVI", "u": "Hugo Reinaldo Herrera Delgado", "p": "", "m": [619, 44, 26, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 3, "c": "FVI", "u": "Javiera Vilugron Artigas", "p": "", "m": [616, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 3, "c": "FVI", "u": "Pamela Lizama Trujillo", "p": "", "m": [96, 81, 188, 400, 116, 912, 504, 632.35, 840, 0, 0, 0]},
+  {"s": "sspp", "j": 5, "c": "ATENTO", "u": "Erick Soto Reyes", "p": "", "m": [0, 0, 0, 0, 0, 108, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 5, "c": "ATENTO", "u": "Ignacio Meriño Fernandez", "p": "", "m": [0, 0, 0, 0, 912, 520, 607, 908.6, 1520, 0, 0, 0]},
+  {"s": "sspp", "j": 5, "c": "ATENTO", "u": "Vanessa Alvarez Cifuentes", "p": "", "m": [0, 0, 0, 0, 204, 0, 38, 90.84, 46, 0, 0, 0]},
+  {"s": "sspp", "j": 5, "c": "FVI", "u": "Erick Soto Reyes", "p": "", "m": [0, 0, 111, 16, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 5, "c": "FVI", "u": "Ignacio Meriño Fernandez", "p": "", "m": [551, 427, 624, 190, 0, 0, 0, 0, 0, 0, 0, 0]},
+  {"s": "sspp", "j": 5, "c": "FVI", "u": "Vanessa Alvarez Cifuentes", "p": "", "m": [424, 3, 0, 142, 0, 0, 0, 0, 0, 0, 0, 0]}
 ]};
 let EVO_METAS = {"updatedAt": null, "gerencia": {"movil": [1150, 1030, 1250, 1200, 1050, 950, 850, 800, 960, 940, 0, 0], "fo": [515, 470, 630, 580, 530, 500, 370, 360, 440, 475, 0, 0], "sspp": [8750, 8500, 7500, 5000, 6000, 6000, 5500, 5000, 4500, 4500, 0, 0]}, "jefes": [
   {"j": 0, "c": "FVI", "movil": [120, 95, 105, 75, 60, 60, 55, 50, 60, 60, 0, 0], "fo": [0, 3, 10, 14, 7, 5, 4, 5, 7, 5, 0, 0], "sspp": [750, 750, 600, 400, 750, 850, 800, 650, 600, 650, 0, 0]}, 
@@ -3504,6 +3589,8 @@ let EVO_METAS = {"updatedAt": null, "gerencia": {"movil": [1150, 1030, 1250, 120
 
 let evoJefeSel = 0;
 let evoTablaServ = 'movil';
+let evoSupServ = 'movil';
+const EVO_PROV_ORDEN = ['Atento','Wesell','Global'];
 
 function evoNorm(v){
   return normalizeName(String(v === undefined || v === null ? '' : v)).trim().replace(/\s+/g,' ');
@@ -3538,6 +3625,19 @@ function evoFindYearCol(hdr){
   const exact = idxs.filter(i => String(hdr[i]).trim() === 'Año');
   return exact.length ? exact[exact.length-1] : idxs[idxs.length-1];
 }
+function evoTexto(v){
+  return String(v === undefined || v === null ? '' : v).trim().replace(/\s+/g,' ');
+}
+// Nombre corto del proveedor (en la hoja Fijo viene como razón social: "INVERSIONES WESELL", "ATENTO CHILE", ...)
+function evoProvNombre(v){
+  const t = evoTexto(v);
+  const n = evoNorm(t);
+  if(!n) return '';
+  if(n.includes('wesell')) return 'Wesell';
+  if(n.includes('global')) return 'Global';
+  if(n.includes('atento')) return 'Atento';
+  return t;
+}
 function evoJefeIdx(name){
   const n = String(name === undefined || name === null ? '' : name).trim();
   return n ? jefeSortIndex(n) : JEFE_ORDER_KEYS.length;
@@ -3545,9 +3645,9 @@ function evoJefeIdx(name){
 
 function computeEvolutivoFromWorkbook(wb){
   const defs = {
-    movil: { jefe:['jefe comercial'], valor:['q l'], cuentaFilas:false, soloActividad:'voz' },  // en Móvil solo cuenta ACTIVIDAD = Voz (se excluye BAM)
-    fo:    { jefe:['jc','jefe comercial'], valor:['cuenta'], cuentaFilas:true },
-    sspp:  { jefe:['jefe comercial'], valor:['nav gestion'], cuentaFilas:false }
+    movil: { jefe:['jefe comercial'], valor:['q l'], cuentaFilas:false, soloActividad:'voz', prov:['proveedor'] },  // en Móvil solo cuenta ACTIVIDAD = Voz (se excluye BAM)
+    fo:    { jefe:['jc','jefe comercial'], valor:['cuenta'], cuentaFilas:true, prov:['nombre_empresa_seller','proveedor'] },
+    sspp:  { jefe:['jefe comercial'], valor:['nav gestion'], cuentaFilas:false, prov:['proveedor'] }
   };
   const hojas = {};
   wb.SheetNames.forEach(name=>{
@@ -3575,6 +3675,8 @@ function computeEvolutivoFromWorkbook(wb){
     let fuera = 0;
     const cMes = evoFindCol(hdr, ['mes cierre']);
     const cCanal = evoFindCol(hdr, ['canal']);
+    const cSup = evoFindCol(hdr, ['supervisor']);
+    const cProv = evoFindCol(hdr, d.prov);
     const cVal = evoFindCol(hdr, d.valor);
     const cYear = evoFindYearCol(hdr);
     if(cJefe < 0 || cMes < 0 || (cVal < 0 && !d.cuentaFilas)){
@@ -3596,8 +3698,9 @@ function computeEvolutivoFromWorkbook(wb){
       }
       const year = cYear >= 0 ? parseInt(row[cYear], 10) : NaN;
       if(isFinite(year)) yearCount[year] = (yearCount[year] || 0) + 1;
-      filas.push({ s: serv.key, j: evoJefeIdx(row[cJefe]), c: (cCanal < 0 || row[cCanal] === null || row[cCanal] === undefined) ? '' : String(row[cCanal]).trim().toUpperCase(), mes, year: isFinite(year) ? year : null, v });
+      filas.push({ s: serv.key, j: evoJefeIdx(row[cJefe]), c: (cCanal < 0 || row[cCanal] === null || row[cCanal] === undefined) ? '' : String(row[cCanal]).trim().toUpperCase(), u: cSup < 0 ? '' : evoTexto(row[cSup]), p: cProv < 0 ? '' : evoProvNombre(row[cProv]), mes, year: isFinite(year) ? year : null, v });
     }
+    if(cSup < 0) avisos.push('la hoja de ' + serv.label + ' no trae la columna SUPERVISOR');
     if(d.soloActividad && cAct < 0) avisos.push('la hoja de ' + serv.label + ' no trae la columna ACTIVIDAD, así que no se pudo filtrar solo Voz');
     if(fuera) avisos.push(fuera + ' fila(s) de ' + serv.label + ' con actividad distinta de Voz no se contaron');
     if(sinMes) avisos.push(sinMes + ' fila(s) de ' + serv.label + ' sin MES CIERRE válido no se contaron');
@@ -3610,9 +3713,26 @@ function computeEvolutivoFromWorkbook(wb){
   const agg = {};
   filas.forEach(f=>{
     if(year !== null && f.year !== null && f.year !== year){ otrosAnios++; return; }
-    const k = f.s + '|' + f.j + '|' + f.c;
-    if(!agg[k]) agg[k] = { s:f.s, j:f.j, c:f.c, m:new Array(12).fill(0) };
+    // una fila por servicio + jefe + canal + supervisor + proveedor (los nombres se comparan sin tildes, mayúsculas ni espacios de más)
+    const k = f.s + '|' + f.j + '|' + f.c + '|' + evoNorm(f.u) + '|' + evoNorm(f.p);
+    if(!agg[k]) agg[k] = { s:f.s, j:f.j, c:f.c, u:f.u, p:f.p, m:new Array(12).fill(0) };
     agg[k].m[f.mes] += f.v;
+  });
+  // supervisores que parecen ser la misma persona escrita de dos formas (un nombre contiene todas las palabras del otro)
+  EVO_SERVICIOS.forEach(serv=>{
+    const nombres = {};
+    Object.keys(agg).forEach(k=>{ const a = agg[k]; if(a.s === serv.key && a.u){ const n = evoNorm(a.u); if(!nombres[n]) nombres[n] = a.u; } });
+    const keys = Object.keys(nombres).sort();
+    const pares = [];
+    keys.forEach(a=>{
+      const ta = a.split(' ');
+      keys.forEach(b=>{
+        if(a === b) return;
+        const tb = b.split(' ');
+        if(ta.length < tb.length && ta.length >= 2 && ta.every(t => tb.includes(t))) pares.push('"' + nombres[a] + '" y "' + nombres[b] + '"');
+      });
+    });
+    if(pares.length) avisos.push('en ' + serv.label + ' hay supervisores que parecen repetidos con distinto nombre: ' + pares.join(', '));
   });
   if(otrosAnios) avisos.push(otrosAnios + ' fila(s) de otros años no se contaron');
   if(faltan.length) avisos.push('no venía la hoja ' + faltan.join(', '));
@@ -3981,7 +4101,7 @@ function evoTablaHTML(last){
   if(sinJefe > 0) notas.push('La fila Gerencia incluye ' + evoFmt(sinJefe) + ' de venta sin Jefe Comercial reconocido.');
 
   return `
-    <div class="section-label">Detalle mensual por Jefe Comercial — ${serv.label} (${serv.unidad})</div>
+    <div class="section-label">Evolutivo ${EVO_VENTAS.year || ''} — Venta por mes · Todos los Jefes Comerciales — ${serv.label} (${serv.unidad})</div>
     <div class="evo-chips">${chips}</div>
     <div class="general-table-wrap">
       <table class="general evo-table">
@@ -3990,6 +4110,158 @@ function evoTablaHTML(last){
       </table>
     </div>
     <p class="evo-note">En cada celda: venta del mes, meta y % de cumplimiento. Cada Jefe Comercial suma sus canales FVI y FQ.${notas.length ? ' ' + notas.join(' ') : ''}</p>`;
+}
+
+// ----- vista por Jefe Comercial y Supervisor (FVI / FQ) y vista por proveedor -----
+function evoTieneDetalle(){
+  return EVO_VENTAS.rows.some(r => typeof r.u === 'string');
+}
+// Canal en que se muestra cada fila: FVI o FQ. En SSPP el archivo dice "Atento" desde mayo (es el mismo canal FVI).
+// Si la fila viene sin canal, se deduce por el proveedor: Atento = FVI; Wesell y Global = FQ.
+function evoCanalGrupo(r){
+  const c = String(r.c || '').trim().toUpperCase();
+  if(c === 'FVI' || c === 'FQ') return c;
+  if(c === 'ATENTO') return 'FVI';
+  if(c === ''){
+    if(r.p === 'Atento') return 'FVI';
+    if(r.p === 'Wesell' || r.p === 'Global') return 'FQ';
+    return '';
+  }
+  return c;
+}
+// "Sup RM" ya no existe como cargo: esa venta queda sin supervisor asignado.
+function evoSupNombre(u){
+  const n = evoNorm(u);
+  return (!n || n === 'sup rm') ? '' : evoTexto(u);
+}
+function evoSumaMeses(rows){
+  const m = new Array(12).fill(0);
+  rows.forEach(r=>{ for(let i=0;i<12;i++) m[i] += r.m[i] || 0; });
+  return m;
+}
+function evoAcumVenta(m, last){ let v = 0; for(let i=0;i<=last;i++) v += m[i]; return v; }
+function evoCeldasMes(m, last){
+  let tds = '';
+  for(let i=0;i<=last;i++) tds += `<td class="${Math.round(m[i]) === 0 ? 'evo-zero' : ''}">${evoFmt(m[i])}</td>`;
+  return tds + `<td class="evo-acum-col">${evoFmt(evoAcumVenta(m, last))}</td>`;
+}
+function evoThsMes(last){
+  let ths = '';
+  for(let m=0;m<=last;m++) ths += `<th>${EVO_MESES_ABR[m]}</th>`;
+  return ths + `<th class="evo-acum-col">Acumulado ${evoRango(last)}</th>`;
+}
+function evoSupTablaHTML(serv, canal, rows, last){
+  const titulo = canal ? 'Canal ' + canal : 'Sin canal';
+  if(!rows.length || !evoSumaMeses(rows).some(x => x !== 0)){
+    return `<div class="evo-sub-label">${titulo}</div><p class="evo-note" style="margin:0 0 6px;">Sin ventas de ${serv.label} en ${canal ? 'el canal ' + canal : 'filas sin canal'} en ${EVO_VENTAS.year}.</p>`;
+  }
+  let body = '';
+  for(let j=0;j<=JEFE_ORDER_KEYS.length;j++){
+    const rj = rows.filter(r => r.j === j);
+    if(!rj.length) continue;
+    const mj = evoSumaMeses(rj);
+    if(!mj.some(x => x !== 0)) continue;
+    const nombreJefe = j < METAS_JEFES.length ? METAS_JEFES[j] : 'Sin Jefe Comercial reconocido';
+    body += `<tr class="evo-jefe-row"><td>${nombreJefe}</td>${evoCeldasMes(mj, last)}</tr>`;
+    const sups = {};
+    rj.forEach(r=>{
+      const nombre = evoSupNombre(r.u);
+      const k = evoNorm(nombre);
+      if(!sups[k]) sups[k] = { nombre, m: new Array(12).fill(0) };
+      for(let i=0;i<12;i++) sups[k].m[i] += r.m[i] || 0;
+    });
+    Object.keys(sups).map(k => sups[k])
+      .map(o => Object.assign(o, { ac: evoAcumVenta(o.m, last) }))
+      .sort((a,b) => ((a.nombre ? 0 : 1) - (b.nombre ? 0 : 1)) || (b.ac - a.ac) || a.nombre.localeCompare(b.nombre, 'es'))
+      .forEach(o=>{
+        body += `<tr class="evo-sup-row"><td>${o.nombre ? escapeHtmlAttr(o.nombre) : 'Sin supervisor asignado'}</td>${evoCeldasMes(o.m, last)}</tr>`;
+      });
+  }
+  body += `<tr class="total-row"><td>Total ${canal || 'sin canal'}</td>${evoCeldasMes(evoSumaMeses(rows), last)}</tr>`;
+  return `
+    <div class="evo-sub-label">${titulo}<span>${serv.label} · ${serv.unidad}</span></div>
+    <div class="general-table-wrap">
+      <table class="general evo-sup-table">
+        <thead><tr class="sub-row"><th class="name-col">Jefe Comercial / Supervisor</th>${evoThsMes(last)}</tr></thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>`;
+}
+function evoSupHTML(last){
+  const year = EVO_VENTAS.year || '';
+  const serv = EVO_SERVICIOS.find(s => s.key === evoSupServ) || EVO_SERVICIOS[0];
+  const label = `<div class="section-label">Evolutivo ${year} — Venta por mes · Jefe Comercial y Supervisor, por canal (FVI / FQ)</div>`;
+  if(!evoTieneDetalle()){
+    return label + `<div class="donut-card" style="max-width:560px;"><p style="font-size:0.9rem; color:var(--muted); margin:0;">Los datos guardados todavía no traen el detalle por supervisor. Vuelve a subir el archivo Evolutivo en la pestaña "Cargar datos" para ver esta vista.</p></div><div class="evo-gap"></div>`;
+  }
+  const chips = EVO_SERVICIOS.map(s => `<button class="${s.key === serv.key ? 'active' : ''}" onclick="evoSetSupServ('${s.key}')">${s.label}</button>`).join('');
+  const rows = EVO_VENTAS.rows.filter(r => r.s === serv.key);
+  const canales = ['FVI','FQ'];
+  rows.forEach(r=>{ const g = evoCanalGrupo(r); if(!canales.includes(g)) canales.push(g); });
+  const tablas = canales.map(c => evoSupTablaHTML(serv, c, rows.filter(r => evoCanalGrupo(r) === c), last)).join('');
+
+  const notas = ['Aquí se muestra solo la venta, porque las metas están cargadas por Jefe Comercial y no por supervisor. Dentro de cada jefe, los supervisores van de mayor a menor venta acumulada.'];
+  const comoAtento = evoAcumVenta(evoSumaMeses(rows.filter(r => String(r.c || '').toUpperCase() === 'ATENTO')), last);
+  if(comoAtento) notas.push('En el archivo, parte de ' + serv.label + ' viene con canal "Atento" (' + evoFmt(comoAtento) + '): se muestra dentro de FVI.');
+  const sinCanal = rows.filter(r => !String(r.c || '').trim());
+  const deducido = evoAcumVenta(evoSumaMeses(sinCanal.filter(r => evoCanalGrupo(r))), last);
+  if(deducido) notas.push(evoFmt(deducido) + ' de venta viene sin canal en el archivo y se ubicó por su proveedor (Atento = FVI; Wesell y Global = FQ).');
+  if(rows.some(r => evoNorm(r.u) === 'sup rm')) notas.push('La venta que figura a nombre de "Sup RM" se muestra como "Sin supervisor asignado".');
+  return `
+    ${label}
+    <div class="evo-chips">${chips}</div>
+    ${tablas}
+    <p class="evo-note">${notas.join(' ')}</p>
+    <div class="evo-gap"></div>`;
+}
+function evoProvHTML(last){
+  const year = EVO_VENTAS.year || '';
+  const label = `<div class="section-label">Evolutivo ${year} — Venta por mes · Proveedor</div>`;
+  if(!evoTieneDetalle()){
+    return label + `<div class="donut-card" style="max-width:560px;"><p style="font-size:0.9rem; color:var(--muted); margin:0;">Los datos guardados todavía no traen el proveedor. Vuelve a subir el archivo Evolutivo en la pestaña "Cargar datos" para ver esta vista.</p></div>`;
+  }
+  let body = '';
+  const notas = [];
+  EVO_SERVICIOS.forEach(serv=>{
+    const rows = EVO_VENTAS.rows.filter(r => r.s === serv.key);
+    if(!rows.length) return;
+    if(!rows.some(r => r.p)){
+      notas.push('La hoja de ' + serv.label + ' del archivo no trae una columna de proveedor, por eso ' + serv.label + ' no aparece en esta tabla.');
+      return;
+    }
+    const grupos = {};
+    rows.forEach(r=>{
+      const k = r.p || '';
+      if(!grupos[k]) grupos[k] = { nombre:k, m:new Array(12).fill(0) };
+      for(let i=0;i<12;i++) grupos[k].m[i] += r.m[i] || 0;
+    });
+    const total = evoSumaMeses(rows);
+    const acTotal = evoAcumVenta(total, last);
+    const orden = n => { if(!n) return 99; const i = EVO_PROV_ORDEN.indexOf(n); return i < 0 ? 50 : i; };
+    const part = v => acTotal > 0 ? Math.round((v/acTotal)*100) + '%' : '—';
+    body += `<tr class="evo-jefe-row"><td>${serv.label}<span class="evo-unit">${serv.unidad}</span></td>${evoCeldasMes(total, last)}<td>${acTotal > 0 ? '100%' : '—'}</td></tr>`;
+    Object.keys(grupos).map(k => grupos[k])
+      .filter(g => g.m.some(x => x !== 0))
+      .sort((a,b) => (orden(a.nombre) - orden(b.nombre)) || a.nombre.localeCompare(b.nombre, 'es'))
+      .forEach(g=>{
+        body += `<tr class="evo-sup-row"><td>${g.nombre ? escapeHtmlAttr(g.nombre) : 'Sin proveedor'}</td>${evoCeldasMes(g.m, last)}<td>${part(evoAcumVenta(g.m, last))}</td></tr>`;
+      });
+  });
+  const tabla = body ? `
+    <div class="general-table-wrap">
+      <table class="general evo-sup-table">
+        <thead><tr class="sub-row"><th class="name-col">Servicio / Proveedor</th>${evoThsMes(last)}<th>% del total</th></tr></thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>` : '';
+  notas.unshift('"% del total" es la participación de cada proveedor en la venta acumulada del servicio.');
+  return `${label}${tabla}<p class="evo-note">${notas.join(' ')}</p>`;
+}
+function evoSetSupServ(k){
+  evoSupServ = k;
+  const y = window.scrollY;
+  renderContent();
+  window.scrollTo(0, y);
 }
 
 function evolutivoHTML(){
@@ -4016,11 +4288,15 @@ function evolutivoHTML(){
     <div class="section-label">Evolutivo ${year} — Venta por mes · Gerencia</div>
     <div class="evo-grid">${EVO_SERVICIOS.map(s => evoCardHTML(s, null, last)).join('')}</div>
 
-    <div class="section-label">Evolutivo ${year} — Venta por mes · Jefe Comercial</div>
+    ${evoTablaHTML(last)}
+    <div class="evo-gap"></div>
+
+    <div class="section-label">Evolutivo ${year} — Venta por mes · Detalle de un Jefe Comercial</div>
     <div class="evo-chips">${chipsJefe}</div>
     <div class="evo-grid">${EVO_SERVICIOS.map(s => evoCardHTML(s, evoJefeSel, last)).join('')}</div>
 
-    ${evoTablaHTML(last)}
+    ${evoSupHTML(last)}
+    ${evoProvHTML(last)}
     ${cargas.length ? '<p class="evo-note">' + cargas.join(' · ') + '.</p>' : ''}
   `;
 }
@@ -4105,7 +4381,7 @@ function renderCargarDatos(){
     ${evoVisible() ? `    <div class="section-label" style="margin-top:32px;">Cargar Evolutivo (ventas por mes)</div>
     <div class="donut-card" style="max-width:480px; margin-bottom:32px;">
       <p style="font-size:0.88rem; color:var(--muted); margin:0 0 16px;">
-        Selecciona el archivo Evolutivo (hojas Movil, Fijo y SSPP). Alimenta la pestaña Evolutivo con las ventas de cada mes por Jefe Comercial. Como el archivo es grande, puede tardar unos segundos.
+        Selecciona el archivo Evolutivo (hojas Movil, Fijo y SSPP). Alimenta la pestaña Evolutivo con las ventas de cada mes por Jefe Comercial, Supervisor y proveedor. Como el archivo es grande, puede tardar unos segundos.
       </p>
       <input type="file" id="upload-file-evo" accept=".xlsx,.xls" style="margin-bottom:14px; width:100%; color:var(--text);">
       <input type="password" id="upload-password-evo" placeholder="Clave de carga" style="width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--line); border-radius:3px; color:var(--text); margin-bottom:14px;">
