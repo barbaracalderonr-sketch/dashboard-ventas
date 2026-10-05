@@ -917,7 +917,7 @@ function metasFormHTML(){
   if(!metasVisible()) return '';
   const fmt = n => Number(n).toLocaleString('es-CL');
   const totV = METAS.reduce((s,m)=>s+m.voz,0), totF = METAS.reduce((s,m)=>s+m.fo,0), totS = METAS.reduce((s,m)=>s+m.sspp,0);
-  const inp = (i,k,v) => `<input type="number" min="0" step="1" id="meta-${k}-${i}" value="${v}" style="width:90px; padding:6px 8px; background:var(--bg); border:1px solid var(--line); border-radius:3px; color:var(--text); text-align:right; font-size:0.85rem;">`;
+  const inp = (i,k,v) => `<input type="number" min="0" step="1" id="meta-${k}-${i}" value="${v}" oninput="metasRecalcTotales()" style="width:90px; padding:6px 8px; background:var(--bg); border:1px solid var(--line); border-radius:3px; color:var(--text); text-align:right; font-size:0.85rem;">`;
   const rows = METAS_JEFES.map((name,i)=>`<tr>
       <td style="text-align:left; padding:6px 10px;">${name}</td>
       <td style="padding:6px 10px;">${inp(i,'voz',METAS[i].voz)}</td>
@@ -944,17 +944,39 @@ function metasFormHTML(){
         </tr></thead>
         <tbody>${rows}</tbody>
         <tfoot><tr style="border-top:1px solid var(--line); font-weight:600;">
-          <td style="text-align:left; padding:6px 10px;">Total (meta actual)</td>
-          <td style="padding:6px 10px; text-align:right;">${fmt(totV)}</td>
-          <td style="padding:6px 10px; text-align:right;">${fmt(totF)}</td>
-          <td style="padding:6px 10px; text-align:right;">${fmt(totS)}</td>
+          <td style="text-align:left; padding:6px 10px;">Total (meta de Gerencia)</td>
+          <td id="metas-total-voz" style="padding:6px 10px; text-align:right;">${fmt(totV)}</td>
+          <td id="metas-total-fo" style="padding:6px 10px; text-align:right;">${fmt(totF)}</td>
+          <td id="metas-total-sspp" style="padding:6px 10px; text-align:right;">${fmt(totS)}</td>
         </tr></tfoot>
       </table>
       </div>
+      <div id="metas-pendiente" style="display:none; font-size:0.82rem; color:var(--amber); font-weight:600; margin:0 0 12px;">Hay cambios sin guardar. El dashboard seguirá usando las metas anteriores hasta que presiones "Guardar metas".</div>
       <input type="password" id="metas-password" placeholder="Clave de carga" style="width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--line); border-radius:3px; color:var(--text); margin-bottom:14px;">
       <button onclick="handleSaveMetas()" style="width:100%; padding:10px 12px; background:var(--amber); color:#1A1200; border:none; border-radius:3px; font-weight:600; cursor:pointer;">Guardar metas</button>
       <div id="metas-status" style="margin-top:12px; font-size:0.85rem; color:var(--muted);"></div>
     </div>`;
+}
+
+// El total de la tabla (la meta de Gerencia) se recalcula mientras se escriben las metas, sin esperar a guardar.
+function metasRecalcTotales(){
+  const fmt = n => Number(n).toLocaleString('es-CL');
+  let cambios = false;
+  for(const k of ['voz','fo','sspp']){
+    let t = 0;
+    for(let i=0;i<METAS_JEFES.length;i++){
+      const el = document.getElementById(`meta-${k}-${i}`);
+      if(!el) return;
+      const v = Number(el.value);
+      const ok = el.value.trim() !== '' && isFinite(v) && v >= 0;
+      if(ok) t += v;
+      if(!ok || v !== METAS[i][k]) cambios = true;
+    }
+    const td = document.getElementById('metas-total-' + k);
+    if(td) td.textContent = fmt(t);
+  }
+  const aviso = document.getElementById('metas-pendiente');
+  if(aviso) aviso.style.display = cambios ? 'block' : 'none';
 }
 
 async function handleSaveMetas(){
