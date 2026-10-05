@@ -860,7 +860,22 @@ async function loadRemoteMetas(){
   }
 }
 
+// La sección "Metas del mes" queda oculta para quienes ven el dashboard.
+// Solo aparece en el navegador donde se abrió una vez el enlace que termina en ?metas=1 (queda recordado en ese navegador).
+// Para volver a ocultarla en ese navegador: abrir el enlace terminado en ?metas=0
+const METAS_VIS_KEY = 'dv-metas-visible';
+function metasVisible(){
+  const q = window.location.search;
+  const on = /[?&]metas=1(&|$)/.test(q), off = /[?&]metas=0(&|$)/.test(q);
+  try{
+    if(on) localStorage.setItem(METAS_VIS_KEY, '1');
+    if(off) localStorage.removeItem(METAS_VIS_KEY);
+    return localStorage.getItem(METAS_VIS_KEY) === '1';
+  }catch(e){ return on; }
+}
+
 function metasFormHTML(){
+  if(!metasVisible()) return '';
   const fmt = n => Number(n).toLocaleString('es-CL');
   const totV = METAS.reduce((s,m)=>s+m.voz,0), totF = METAS.reduce((s,m)=>s+m.fo,0), totS = METAS.reduce((s,m)=>s+m.sspp,0);
   const inp = (i,k,v) => `<input type="number" min="0" step="1" id="meta-${k}-${i}" value="${v}" style="width:90px; padding:6px 8px; background:var(--bg); border:1px solid var(--line); border-radius:3px; color:var(--text); text-align:right; font-size:0.85rem;">`;
@@ -4543,7 +4558,7 @@ window.addEventListener('resize', ()=>{
 
 function renderCargarDatos(){
   document.getElementById('main-content').innerHTML = metasFormHTML() + `
-    <div class="section-label">Cargar datos del día (Móvil)</div>
+    <div class="section-label"${metasVisible() ? '' : ' style="margin-top:0;"'}>Cargar datos del día (Móvil)</div>
     <div class="donut-card" style="max-width:480px; margin-bottom:32px;">
       <p style="font-size:0.88rem; color:var(--muted); margin:0 0 16px;">
         Selecciona el archivo BBDD_Movil.xlsx del día. Se procesa en tu navegador y se guarda para que todos vean la actualización, sin exponer ninguna clave.
@@ -4590,7 +4605,7 @@ function renderCargarDatos(){
     <div class="section-label">Cargar Metas anuales (Evolutivo)</div>
     <div class="donut-card" style="max-width:480px;">
       <p style="font-size:0.88rem; color:var(--muted); margin:0 0 16px;">
-        Selecciona el archivo Metas_Anual.xlsx (bloque "Regiones" para la Gerencia y un bloque por Jefe Comercial, con las metas de SSPP, Voz Móvil y FO por mes). Solo se usa en la pestaña Evolutivo; las metas del mes actual se siguen editando arriba.
+        Selecciona el archivo Metas_Anual.xlsx (bloque "Regiones" para la Gerencia y un bloque por Jefe Comercial, con las metas de SSPP, Voz Móvil y FO por mes). Solo se usa en la pestaña Evolutivo; las metas del mes actual se editan aparte, en la sección "Metas del mes".
       </p>
       <input type="file" id="upload-file-evometas" accept=".xlsx,.xls" style="margin-bottom:14px; width:100%; color:var(--text);">
       <input type="password" id="upload-password-evometas" placeholder="Clave de carga" style="width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--line); border-radius:3px; color:var(--text); margin-bottom:14px;">
