@@ -627,6 +627,45 @@
     line-height:1.5;
   }
   .evo-gap{ height:36px; }
+  .evo-dl{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:10px 18px;
+    background: var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 16px;
+    margin:0 0 24px;
+    max-width:760px;
+  }
+  .evo-dl-info{ flex:1 1 260px; min-width:0; }
+  .evo-dl-info b{ display:block; font-size:0.9rem; color: var(--text); }
+  .evo-dl-info span{ display:block; font-size:0.78rem; color: var(--muted); margin-top:2px; line-height:1.4; }
+  .evo-dl button{
+    background: var(--amber);
+    color:#1A1200;
+    border:none;
+    border-radius:3px;
+    font-family: var(--font-body);
+    font-weight:600;
+    font-size:0.85rem;
+    padding:9px 16px;
+    cursor:pointer;
+  }
+  .evo-dl button:disabled{ opacity:0.6; cursor:default; }
+  .evo-dl-form{ flex:1 1 100%; display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  .evo-dl-form input{
+    flex:1 1 200px;
+    min-width:0;
+    padding:9px 12px;
+    background: var(--bg);
+    border:1px solid var(--line);
+    border-radius:3px;
+    color: var(--text);
+    font-size:0.85rem;
+  }
+  .evo-dl-status{ flex:1 1 100%; font-size:0.82rem; color: var(--muted); }
   .evo-vistas{
     display:inline-flex;
     background: var(--panel-2);
@@ -3890,6 +3929,7 @@ async function loadRemoteEvolutivo(){
   } catch(e){
     console.log('Sin evolutivo guardado todavía; se usan los valores iniciales.');
   }
+  evoCargarIndiceArchivo();
 }
 
 async function evoSave(key, data, password){
@@ -3899,7 +3939,165 @@ async function evoSave(key, data, password){
     body: JSON.stringify({ password, key, data })
   });
   const result = await res.json();
-  if(!res.ok) throw new Error(result.error || 'no se pudo guardar. Revisa la clave.');
+  if(!res.ok){
+    const err = new Error(result.error || 'no se pudo guardar. Revisa la clave.');
+    err.status = res.status;
+    throw err;
+  }
+}
+
+// ----- archivo Evolutivo para descarga -----
+// Al subir el Evolutivo en "Cargar datos", el mismo Excel queda guardado (en partes de ~1 MB) para que se pueda
+// descargar desde la pestaña Evolutivo. Se descarga con la clave de Gerencia de "Descargar BBDD" (la de base completa).
+const EVO_FILE_KEY = 'evolutivo-file';        // índice: { id, name, mime, size, parts, sha256, updatedAt }
+const EVO_FILE_PART_CHARS = 1000000;          // tamaño de cada parte en texto base64 (múltiplo de 4)
+const EVO_FILE_MAX_BYTES = 20 * 1024 * 1024;
+let EVO_FILE = null;
+let evoDlOpen = false;
+let evoDlBusy = false;
+
+function evoValidFileIndex(d){
+  return d && typeof d.name === 'string' && typeof d.id === 'string' && Number.isInteger(d.parts) && d.parts > 0 && typeof d.size === 'number';
+}
+async function evoFetchJson(key, stamp){
+  const res = await fetch('/api/get-data?key=' + encodeURIComponent(key) + '&t=' + encodeURIComponent(stamp || Date.now()), { cache: 'no-store' });
+  if(!res.ok) throw new Error('el servidor respondió ' + res.status);
+  return res.json();
+}
+async function evoCargarIndiceArchivo(){
+  try{
+    const d = await evoFetchJson(EVO_FILE_KEY);
+    const nuevo = evoValidFileIndex(d) ? d : null;
+    const cambio = (nuevo ? nuevo.id : null) !== (EVO_FILE ? EVO_FILE.id : null);
+    EVO_FILE = nuevo;
+    if(cambio && activeTab === 'evolutivo' && !evoDlBusy) renderContent();
+  } catch(e){
+    console.log('Sin archivo Evolutivo guardado para descarga.');
+  }
+}
+function evoBytesToB64(bytes){
+  let bin = '';
+  const paso = 0x8000;
+  for(let i=0;i<bytes.length;i+=paso) bin += String.fromCharCode.apply(null, bytes.subarray(i, i+paso));
+  return btoa(bin);
+}
+function evoB64ToBytes(b64){
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+async function evoSha256(buf){
+  if(!(window.crypto && crypto.subtle)) return null;
+  const h = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+// guarda con hasta 3 intentos (una red inestable puede cortar una subida); una clave incorrecta no se reintenta
+async function evoSaveRetry(key, data, password){
+  let ultimo = null;
+  for(let intento=0; intento<3; intento++){
+    try{ await evoSave(key, data, password); return; }
+    catch(e){
+      ultimo = e;
+      if(e.status === 401 || e.status === 400) throw e;
+      await new Promise(r => setTimeout(r, 800 * (intento + 1)));
+    }
+  }
+  throw ultimo;
+}
+async function evoGuardarArchivo(file, buf, password, onProgress){
+  if(file.size > EVO_FILE_MAX_BYTES) throw new Error('pesa ' + Math.round(file.size/1024/1024) + ' MB y el máximo para dejarlo descargable es ' + Math.round(EVO_FILE_MAX_BYTES/1024/1024) + ' MB');
+  const b64 = evoBytesToB64(new Uint8Array(buf));
+  const total = Math.ceil(b64.length / EVO_FILE_PART_CHARS);
+  const id = new Date().toISOString();
+  const sha256 = await evoSha256(buf);
+  for(let i=0;i<total;i++){
+    if(onProgress) onProgress(i + 1, total);
+    await evoSaveRetry(EVO_FILE_KEY + '-p' + i, { id, i, b64: b64.slice(i * EVO_FILE_PART_CHARS, (i + 1) * EVO_FILE_PART_CHARS) }, password);
+  }
+  // el índice se guarda al final: mientras no cambie, se sigue ofreciendo el archivo anterior
+  const indice = { id, name: file.name, mime: file.type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', size: file.size, parts: total, sha256, updatedAt: id };
+  await evoSaveRetry(EVO_FILE_KEY, indice, password);
+  EVO_FILE = indice;
+}
+function evoPesoTxt(bytes){
+  return (bytes / 1024 / 1024).toLocaleString('es-CL', { minimumFractionDigits:1, maximumFractionDigits:1 }) + ' MB';
+}
+function evoDescargaHTML(){
+  if(!EVO_FILE){
+    return `<div class="evo-dl"><div class="evo-dl-info"><b>Archivo Evolutivo (Excel)</b><span>Todavía no hay un archivo para descargar. Quedará disponible aquí después de la próxima carga del Evolutivo.</span></div></div>`;
+  }
+  const fecha = new Date(EVO_FILE.updatedAt).toLocaleString('es-CL',{timeZone:'America/Santiago',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
+  const form = evoDlOpen ? `<div class="evo-dl-form">
+        <input type="password" id="evo-dl-password" placeholder="Clave de descarga (Gerencia)" autocomplete="off" onkeydown="if(event.key==='Enter') evoDescargarArchivo()">
+        <button id="evo-dl-go" onclick="evoDescargarArchivo()">Descargar</button>
+        <div class="evo-dl-status" id="evo-dl-status">Se descarga con la clave de Gerencia de la pestaña "Descargar BBDD".</div>
+      </div>` : '';
+  return `<div class="evo-dl">
+      <div class="evo-dl-info"><b>Archivo Evolutivo (Excel)</b><span>${escapeHtmlAttr(EVO_FILE.name)} · base completa de Móvil, Fijo y SSPP · cargado el ${fecha} · ${evoPesoTxt(EVO_FILE.size)}</span></div>
+      ${evoDlOpen ? '' : '<button onclick="evoToggleDescarga()">Descargar archivo</button>'}
+      ${form}
+    </div>`;
+}
+function evoToggleDescarga(){
+  evoDlOpen = true;
+  const y = window.scrollY;
+  renderContent();
+  window.scrollTo(0, y);
+  const inp = document.getElementById('evo-dl-password');
+  if(inp) inp.focus();
+}
+async function evoDescargarArchivo(){
+  if(evoDlBusy) return;
+  const st = document.getElementById('evo-dl-status');
+  const inp = document.getElementById('evo-dl-password');
+  const btn = document.getElementById('evo-dl-go');
+  const pass = inp ? inp.value : '';
+  if(!pass){ st.textContent = 'Ingresa la clave de descarga.'; return; }
+  if(!DOWNLOAD_PASSWORDS.hasOwnProperty(pass) || DOWNLOAD_PASSWORDS[pass] !== 'all'){
+    st.textContent = 'Clave incorrecta. Este archivo se descarga solo con la clave de Gerencia.';
+    return;
+  }
+  evoDlBusy = true;
+  if(btn) btn.disabled = true;
+  try{
+    st.textContent = 'Preparando descarga...';
+    const idx = await evoFetchJson(EVO_FILE_KEY);
+    if(!evoValidFileIndex(idx)) throw new Error('todavía no hay un archivo guardado');
+    const trozos = [];
+    let bytes = 0;
+    for(let i=0;i<idx.parts;i++){
+      st.textContent = 'Descargando... parte ' + (i + 1) + ' de ' + idx.parts;
+      const part = await evoFetchJson(EVO_FILE_KEY + '-p' + i, idx.id);
+      if(!part || part.id !== idx.id || typeof part.b64 !== 'string') throw new Error('ACTUALIZANDO');
+      const u8 = evoB64ToBytes(part.b64);
+      bytes += u8.length;
+      trozos.push(u8);
+    }
+    if(bytes !== idx.size) throw new Error('ACTUALIZANDO');
+    const blob = new Blob(trozos, { type: idx.mime || 'application/octet-stream' });
+    if(idx.sha256){
+      const h = await evoSha256(await blob.arrayBuffer());
+      if(h && h !== idx.sha256) throw new Error('ACTUALIZANDO');
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = idx.name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 60000);
+    st.textContent = 'Descarga lista: ' + idx.name + ' (' + evoPesoTxt(idx.size) + ').';
+    if(inp) inp.value = '';
+  } catch(e){
+    st.textContent = e.message === 'ACTUALIZANDO'
+      ? 'El archivo se está actualizando en este momento. Espera un minuto y vuelve a intentar.'
+      : 'No se pudo descargar (' + e.message + '). Revisa tu conexión y vuelve a intentar.';
+  } finally {
+    evoDlBusy = false;
+    if(btn) btn.disabled = false;
+  }
 }
 
 async function handleUploadEvolutivo(){
@@ -3911,14 +4109,24 @@ async function handleUploadEvolutivo(){
   statusEl.textContent = 'Procesando archivo (puede tardar unos segundos)...';
   try{
     await new Promise(r => setTimeout(r, 30));
-    const buf = await fileInput.files[0].arrayBuffer();
+    const file = fileInput.files[0];
+    const buf = await file.arrayBuffer();
     const wb = XLSX.read(buf, {type:'array'});
     const c = computeEvolutivoFromWorkbook(wb);
     const data = { year: c.year, updatedAt: new Date().toISOString(), rows: c.rows };
     statusEl.textContent = 'Subiendo datos...';
     await evoSave('evolutivo-data', data, pass);
     EVO_VENTAS = data;
-    statusEl.textContent = 'Listo. Evolutivo ' + c.year + ' actualizado (' + c.filas.toLocaleString('es-CL') + ' filas leídas).' + (c.avisos.length ? ' Aviso: ' + c.avisos.join('; ') + '.' : '');
+    const listo = 'Listo. Evolutivo ' + c.year + ' actualizado (' + c.filas.toLocaleString('es-CL') + ' filas leídas).' + (c.avisos.length ? ' Aviso: ' + c.avisos.join('; ') + '.' : '');
+    // el mismo archivo queda guardado para que se pueda descargar desde la pestaña Evolutivo
+    let archivo = '';
+    try{
+      await evoGuardarArchivo(file, buf, pass, (i, n) => { statusEl.textContent = 'Datos actualizados. Guardando el archivo para descarga (parte ' + i + ' de ' + n + ')...'; });
+      archivo = ' El archivo quedó disponible para descargar en la pestaña Evolutivo.';
+    } catch(e){
+      archivo = ' Ojo: los datos sí se actualizaron, pero el archivo no quedó guardado para descarga (' + e.message + '). Vuelve a apretar "Subir y actualizar" para intentarlo de nuevo.';
+    }
+    statusEl.textContent = listo + archivo;
   } catch(e){
     statusEl.textContent = 'Error: ' + e.message;
   }
@@ -4493,10 +4701,12 @@ function evolutivoHTML(){
       <button class="${evoVista === 'clientes' ? 'active' : ''}" onclick="evoSetVista('clientes')">Clientes y ticket promedio</button>
     </div>`;
   const pie = cargas.length ? '<p class="evo-note">' + cargas.join(' · ') + '.</p>' : '';
-  if(evoVista === 'clientes') return vistas + evoClientesVistaHTML(last) + pie;
+  const descarga = evoDescargaHTML();
+  if(evoVista === 'clientes') return vistas + descarga + evoClientesVistaHTML(last) + pie;
 
   return `
     ${vistas}
+    ${descarga}
     ${kpiRowHTML(kpis)}
     <div class="section-label">Evolutivo ${year} — Venta por mes · Gerencia</div>
     <div class="evo-grid">${EVO_SERVICIOS.map(s => evoCardHTML(s, null, last)).join('')}</div>
@@ -4594,7 +4804,7 @@ function renderCargarDatos(){
     ${evoVisible() ? `    <div class="section-label" style="margin-top:32px;">Cargar Evolutivo (ventas por mes)</div>
     <div class="donut-card" style="max-width:480px; margin-bottom:32px;">
       <p style="font-size:0.88rem; color:var(--muted); margin:0 0 16px;">
-        Selecciona el archivo Evolutivo (hojas Movil, Fijo y SSPP). Alimenta la pestaña Evolutivo con las ventas de cada mes por Jefe Comercial, Supervisor y proveedor, y con los clientes de cada servicio para el ticket promedio (en Móvil con la columna "Cuenta Rut"; en FO y SSPP por RUT distinto en el mes). Como el archivo es grande, puede tardar unos segundos.
+        Selecciona el archivo Evolutivo (hojas Movil, Fijo y SSPP). Alimenta la pestaña Evolutivo con las ventas de cada mes por Jefe Comercial, Supervisor y proveedor, y con los clientes de cada servicio para el ticket promedio (en Móvil con la columna "Cuenta Rut"; en FO y SSPP por RUT distinto en el mes). Como el archivo es grande, puede tardar unos segundos. El mismo archivo queda disponible para descargar en la pestaña Evolutivo (con la clave de Gerencia de "Descargar BBDD").
       </p>
       <input type="file" id="upload-file-evo" accept=".xlsx,.xls" style="margin-bottom:14px; width:100%; color:var(--text);">
       <input type="password" id="upload-password-evo" placeholder="Clave de carga" style="width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--line); border-radius:3px; color:var(--text); margin-bottom:14px;">
