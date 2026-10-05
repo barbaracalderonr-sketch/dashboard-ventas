@@ -4701,12 +4701,12 @@ function evolutivoHTML(){
       <button class="${evoVista === 'clientes' ? 'active' : ''}" onclick="evoSetVista('clientes')">Clientes y ticket promedio</button>
     </div>`;
   const pie = cargas.length ? '<p class="evo-note">' + cargas.join(' · ') + '.</p>' : '';
-  const descarga = evoDescargaHTML();
-  if(evoVista === 'clientes') return vistas + descarga + evoClientesVistaHTML(last) + pie;
+  // la descarga del archivo va al final de la pestaña, en las dos vistas
+  const descarga = '<div class="section-label" style="margin-top:32px;">Descargar archivo Evolutivo</div>' + evoDescargaHTML();
+  if(evoVista === 'clientes') return vistas + evoClientesVistaHTML(last) + pie + descarga;
 
   return `
     ${vistas}
-    ${descarga}
     ${kpiRowHTML(kpis)}
     <div class="section-label">Evolutivo ${year} — Venta por mes · Gerencia</div>
     <div class="evo-grid">${EVO_SERVICIOS.map(s => evoCardHTML(s, null, last)).join('')}</div>
@@ -4721,6 +4721,7 @@ function evolutivoHTML(){
     ${evoSupHTML(last, 'ventas')}
     ${evoProvHTML(last)}
     ${pie}
+    ${descarga}
   `;
 }
 
