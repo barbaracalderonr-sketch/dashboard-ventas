@@ -3508,9 +3508,9 @@ const EVO_SERVICIOS = [
 // Jefes que ya no están: sus metas (y sus ventas, que en la base ya figuran a nombre del jefe actual) se suman al jefe que heredó sus cifras.
 // clave = primer nombre del bloque en el archivo de metas; valor = primer nombre del Jefe Comercial actual.
 const EVO_ALIAS_JEFES = { 'carlos': 'hernan' };
-// Mientras el Evolutivo está en revisión, solo se ve entrando con el enlace que termina en ?evolutivo=1
-// Cuando esté listo para todos, cambiar a true.
-const EVO_PUBLICADO = false;
+// Evolutivo publicado para todos (2026-10-05), después de cruzar ventas, clientes y metas contra los Excel.
+// Para volver a ocultarlo (solo visible con el enlace terminado en ?evolutivo=1), cambiar a false.
+const EVO_PUBLICADO = true;
 function evoVisible(){
   return EVO_PUBLICADO || /[?&]evolutivo=1(&|$)/.test(window.location.search);
 }
