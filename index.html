@@ -1193,7 +1193,7 @@ function donutSVG(segments){
 
 function renderEstadosTable(canal, rows, totals){
   const hasEspera = canal === 'FQ';
-  const visColspan = hasEspera ? 4 : 3;
+  const visColspan = hasEspera ? 5 : 4;
 
   function rowHtml(r, isTotal){
     const cls = isTotal ? 'total-row' : '';
@@ -1208,6 +1208,7 @@ function renderEstadosTable(canal, rows, totals){
         <td>${r.pendienteAsesor.toLocaleString('es-CL')}</td>
         <td>${r.agendamiento.toLocaleString('es-CL')}</td>
         ${hasEspera ? `<td>${r.esperaVisado.toLocaleString('es-CL')}</td>` : ''}
+        <td>${(r.seguridad||0).toLocaleString('es-CL')}</td>
         <td>${r.visSub.toLocaleString('es-CL')}</td>
         <td><strong>${r.total.toLocaleString('es-CL')}</strong></td>
       </tr>
@@ -1233,7 +1234,7 @@ function renderEstadosTable(canal, rows, totals){
             </tr>
             <tr class="sub-row">
               <th>Despacho</th><th>Entregado</th><th>Subtotal</th>
-              <th>Pendiente asesor</th><th>Agendamiento</th>${hasEspera ? '<th>Espera visado</th>' : ''}<th>Subtotal</th>
+              <th>Pendiente asesor</th><th>Agendamiento</th>${hasEspera ? '<th>Espera visado</th>' : ''}<th>Seguridad</th><th>Subtotal</th>
             </tr>
           </thead>
           <tbody>
@@ -1641,7 +1642,7 @@ function computeFromBBDDRows(jsonRows){
       const jefe = normKey(r['JEFE COMERCIAL']);
       const sup = normKey(r['SUPERVISOR']);
       const key = jefe + '|||' + sup;
-      if(!map.has(key)) map.set(key, {jefe, supervisor: sup, AAA:0, Despacho:0, Entregado:0, PendienteAsesor:0, Agendamiento:0, EsperaVisado:0});
+      if(!map.has(key)) map.set(key, {jefe, supervisor: sup, AAA:0, Despacho:0, Entregado:0, PendienteAsesor:0, Agendamiento:0, EsperaVisado:0, Seguridad:0});
       const g = map.get(key);
       const estado1 = normKey(r['ESTADO 1']);
       const ql = Number(r['Q L']) || 0;
@@ -1651,6 +1652,7 @@ function computeFromBBDDRows(jsonRows){
       else if(estado1 === 'Pendiente asesor') g.PendienteAsesor += ql;
       else if(estado1 === 'Agendamiento') g.Agendamiento += ql;
       else if(estado1 === 'Espera visado') g.EsperaVisado += ql;
+      else if(estado1 === 'Seguridad') g.Seguridad += ql;
     }
     return Array.from(map.values());
   }
@@ -1658,23 +1660,23 @@ function computeFromBBDDRows(jsonRows){
   function buildEstados(groups){
     const rows = groups.map(g=>{
       const logSub = g.Despacho + g.Entregado;
-      const visSub = g.PendienteAsesor + g.Agendamiento + g.EsperaVisado;
+      const visSub = g.PendienteAsesor + g.Agendamiento + g.EsperaVisado + g.Seguridad;
       return { jefe: g.jefe, supervisor: g.supervisor, aaa: g.AAA, despacho: g.Despacho, entregado: g.Entregado,
-        logSub, pendienteAsesor: g.PendienteAsesor, agendamiento: g.Agendamiento, esperaVisado: g.EsperaVisado,
+        logSub, pendienteAsesor: g.PendienteAsesor, agendamiento: g.Agendamiento, esperaVisado: g.EsperaVisado, seguridad: g.Seguridad,
         visSub, total: g.AAA + logSub + visSub };
     });
     const total = rows.reduce((acc,r)=>{
       acc.aaa+=r.aaa; acc.despacho+=r.despacho; acc.entregado+=r.entregado; acc.logSub+=r.logSub;
-      acc.pendienteAsesor+=r.pendienteAsesor; acc.agendamiento+=r.agendamiento; acc.esperaVisado+=r.esperaVisado;
+      acc.pendienteAsesor+=r.pendienteAsesor; acc.agendamiento+=r.agendamiento; acc.esperaVisado+=r.esperaVisado; acc.seguridad+=r.seguridad;
       acc.visSub+=r.visSub; acc.total+=r.total; return acc;
-    }, {aaa:0,despacho:0,entregado:0,logSub:0,pendienteAsesor:0,agendamiento:0,esperaVisado:0,visSub:0,total:0});
+    }, {aaa:0,despacho:0,entregado:0,logSub:0,pendienteAsesor:0,agendamiento:0,esperaVisado:0,seguridad:0,visSub:0,total:0});
     return { rows, total };
   }
 
   function buildEstado2(groups){
     const rows = groups.map(g=>{
       const log = g.Despacho + g.Entregado;
-      const vis = g.PendienteAsesor + g.Agendamiento + g.EsperaVisado;
+      const vis = g.PendienteAsesor + g.Agendamiento + g.EsperaVisado + g.Seguridad;
       return { jefe: g.jefe, supervisor: g.supervisor, aaa: g.AAA, logistica: log, visado: vis, total: g.AAA+log+vis };
     });
     const total = rows.reduce((acc,r)=>{ acc.aaa+=r.aaa; acc.logistica+=r.logistica; acc.visado+=r.visado; acc.total+=r.total; return acc; }, {aaa:0,logistica:0,visado:0,total:0});
@@ -1699,7 +1701,7 @@ function computeFromBBDDRows(jsonRows){
       const asesor = normKey(r['NOMBRE ASESOR ']) || normKey(r['NOMBRE ASESOR']);
       const rut = normKey(r['RUT ASESOR']);
       const key = jefe + '|||' + sup + '|||' + asesor + '|||' + rut;
-      if(!map.has(key)) map.set(key, { jefe, supervisor: sup, asesor, rut, AAA:0, Despacho:0, Entregado:0, PendienteAsesor:0, Agendamiento:0, EsperaVisado:0 });
+      if(!map.has(key)) map.set(key, { jefe, supervisor: sup, asesor, rut, AAA:0, Despacho:0, Entregado:0, PendienteAsesor:0, Agendamiento:0, EsperaVisado:0, Seguridad:0 });
       const g = map.get(key);
       const estado1 = normKey(r['ESTADO 1']);
       const ql = Number(r['Q L']) || 0;
@@ -1709,11 +1711,12 @@ function computeFromBBDDRows(jsonRows){
       else if(estado1 === 'Pendiente asesor') g.PendienteAsesor += ql;
       else if(estado1 === 'Agendamiento') g.Agendamiento += ql;
       else if(estado1 === 'Espera visado') g.EsperaVisado += ql;
+      else if(estado1 === 'Seguridad') g.Seguridad += ql;
     }
     return Array.from(map.values())
       .map(g=>{
         const logistica = g.Despacho + g.Entregado;
-        const visado = g.PendienteAsesor + g.Agendamiento + g.EsperaVisado;
+        const visado = g.PendienteAsesor + g.Agendamiento + g.EsperaVisado + g.Seguridad;
         return { jefe: g.jefe, supervisor: g.supervisor, asesor: g.asesor, rut: g.rut,
           aaa: g.AAA, logistica, visado, total: g.AAA + logistica + visado };
       })
