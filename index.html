@@ -1192,7 +1192,8 @@ function donutSVG(segments){
 }
 
 function renderEstadosTable(canal, rows, totals){
-  const hasEspera = canal === 'FQ';
+  // Espera visado se muestra en FVI y FQ: así las columnas de Visado siempre suman el Subtotal.
+  const hasEspera = true;
   const visColspan = hasEspera ? 5 : 4;
 
   function rowHtml(r, isTotal){
