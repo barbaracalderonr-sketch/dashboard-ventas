@@ -1461,6 +1461,16 @@ function renderTabs(){
   }).join('');
 }
 
+// Mes y año en curso (hora de Chile) para el título de la Vista General, p. ej. "Octubre 2026".
+// Se calcula solo, así el título cambia automáticamente cada mes.
+function periodoActualTexto(){
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const partes = new Intl.DateTimeFormat('en-CA',{timeZone:'America/Santiago',year:'numeric',month:'numeric'}).formatToParts(new Date());
+  const mes = Number(partes.find(x=>x.type==='month').value);
+  const anio = partes.find(x=>x.type==='year').value;
+  return meses[mes-1] + ' ' + anio;
+}
+
 function renderGeneral(){
   function fmt(n){ return n === null ? '' : n.toLocaleString('es-CL'); }
   function pctTd(pct, extraClass){
@@ -1492,7 +1502,7 @@ function renderGeneral(){
       { value: t.foPct+'%', label: 'Cumplimiento FO', sub: fmt(t.foTotal)+' unidades FVI+FQ', tone: pillClass(t.foPct) },
       { value: t.ssppPct+'%', label: 'Cumplimiento SSPP', sub: fmt(t.ssppFvi)+' NAV Gestión', tone: pillClass(t.ssppPct) }
     ])}
-    <div class="section-label">Cierre reporte Móvil-Fija-SSPP FVI-FQ — ${general.period}</div>
+    <div class="section-label">Avance del mes Móvil-Fija-SSPP FVI-FQ — ${periodoActualTexto()}</div>
     <div class="general-table-wrap">
       <table class="general">
         <thead>
