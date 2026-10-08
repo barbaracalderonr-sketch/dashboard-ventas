@@ -1427,7 +1427,7 @@ function estado2Table(canal, rows, totals){
   const bodyRows = [...rows].sort((a,b)=>jefeSortIndex(a.jefe)-jefeSortIndex(b.jefe)).map(r=>rowHtml(r,false)).join('');
   return `
     <div class="canal-block">
-      <h3>Resumen por Estado 2 — ${canal}</h3>
+      <h3>Resumen por Estado — ${canal}</h3>
       <div class="detail-table-wrap">
         <table class="detail estados-table">
           <thead>
@@ -1447,7 +1447,7 @@ function estado2Table(canal, rows, totals){
 
 function estado2HTML(){
   return `
-    <div class="section-label">Resumen por Estado 2 (AAA / Logística / Visado) — total de ventas en cada estado, por Jefe Comercial y Supervisor</div>
+    <div class="section-label">Resumen por Estado (AAA / Logística / Visado) — total de ventas en cada estado, por Jefe Comercial y Supervisor</div>
     ${estado2Table('FVI', ESTADO2_FVI_ROWS, ESTADO2_FVI_TOTAL)}
     ${estado2Table('FQ', ESTADO2_FQ_ROWS, ESTADO2_FQ_TOTAL)}
   `;
