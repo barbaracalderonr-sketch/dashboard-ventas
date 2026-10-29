@@ -1846,6 +1846,36 @@ async function handleUpload(){
   }
 }
 
+// ---------- Guardado liviano ----------
+// Todas las cargas envían la clave y el nombre del dato en encabezados, y los datos
+// directo en el cuerpo, para que el servidor no tenga que procesar archivos grandes.
+(function(){
+  const originalFetch = window.fetch.bind(window);
+  window.fetch = function(url, init){
+    try{
+      if(typeof url === 'string' && url.indexOf('/api/save-data') === 0 && init && typeof init.body === 'string'){
+        const payload = JSON.parse(init.body);
+        if(payload && typeof payload === 'object' && 'data' in payload){
+          return originalFetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Upload-Password': encodeURIComponent(payload.password || ''),
+              'X-Data-Key': payload.key || 'movil-data'
+            },
+            body: JSON.stringify(payload.data)
+          }).then(res => {
+            const ct = res.headers.get('Content-Type') || '';
+            if(ct.indexOf('application/json') !== -1) return res;
+            return new Response(JSON.stringify({ error: 'el servidor no pudo guardar (código ' + res.status + '). Intenta de nuevo en unos minutos.' }), { status: res.status || 500, headers: {'Content-Type':'application/json'} });
+          });
+        }
+      }
+    } catch(e){}
+    return originalFetch(url, init);
+  };
+})();
+
 // ---------- FO: cálculo automático desde BBDD_FO.xlsx (hoja MAESTRO) ----------
 const CANONICAL_JEFES = GENERAL.rows.map(r=>r.name);
 
